@@ -212,6 +212,7 @@ See [docs/examples/](docs/examples/) for annotated config files.
 
 ## Documentation
 
+- **[CLI Reference](docs/cli-usage.md)** — All commands, flags, prompts, and examples
 - **[Configuration Reference](docs/config-reference.md)** — Complete field documentation, defaults, validation rules, and examples
 - **[Architecture Guide](docs/architecture.md)** — Internal design, generator interface, and extending gpy
 - **[Troubleshooting](docs/troubleshooting.md)** — Common errors and solutions

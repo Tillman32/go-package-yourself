@@ -98,7 +98,12 @@ func Init(opts *GlobalOpts, args []string) error {
 
 	fmt.Printf("✓ Created config file: %s\n", configPath)
 	fmt.Printf("✓ Edit the file to customize your configuration\n")
-	fmt.Printf("\nRun: gpy package to generate packaging artifacts\n")
+	fmt.Printf("\nNext steps:\n")
+	fmt.Printf("  1. gpy package          # Generate npm, homebrew, chocolatey, docker artifacts\n")
+	if cfg.GitHub.Workflows.Enabled {
+		fmt.Printf("  2. gpy workflow --write # Create GitHub Actions release workflow\n")
+	}
+	fmt.Printf("\nSee docs at: https://github.com/your/repo\n")
 
 	return nil
 }
@@ -186,6 +191,20 @@ func interactiveInit(cfg *model.Config, projectRoot string) error {
 			cfg.Packages.Chocolatey.PackageID = pkgID
 		} else {
 			cfg.Packages.Chocolatey.PackageID = name
+		}
+	}
+
+	fmt.Printf("Enable docker image? (y/n) [n]: ")
+	result, _ = reader.ReadString('\n')
+	if strings.TrimSpace(strings.ToLower(result)) == "y" {
+		cfg.Packages.Docker.Enabled = true
+		fmt.Printf("  docker image name [%s]: ", name)
+		imgName, _ := reader.ReadString('\n')
+		imgName = strings.TrimSpace(imgName)
+		if imgName != "" {
+			cfg.Packages.Docker.ImageName = imgName
+		} else {
+			cfg.Packages.Docker.ImageName = name
 		}
 	}
 
@@ -375,6 +394,16 @@ packages:
 		yamlData.WriteString(`
     packageId: `)
 		yamlData.WriteString(cfg.Packages.Chocolatey.PackageID)
+	}
+	yamlData.WriteString(`
+
+  docker:
+    enabled: `)
+	yamlData.WriteString(fmt.Sprintf("%v", cfg.Packages.Docker.Enabled))
+	if cfg.Packages.Docker.Enabled && cfg.Packages.Docker.ImageName != "" {
+		yamlData.WriteString(`
+    imageName: `)
+		yamlData.WriteString(cfg.Packages.Docker.ImageName)
 	}
 	yamlData.WriteString(`
 

@@ -1,5 +1,5 @@
 # go-package-yourself configuration
-# See: https://github.com/Tillman32/go-package-yourself for documentation
+# See: https://github.com/your/repo for documentation
 #
 # This file configures artifact generation for:
 # - npm/npx packages
@@ -12,12 +12,12 @@ schemaVersion: 1
 project:
   name: go-package-yourself
   repo: Tillman32/go-package-yourself
-  description: "Go Package Yourself: Generate npm, Homebrew, Chocolatey packages for your Go CLI tool"
-  homepage: https://github.com/Tillman32/go-package-yourself
-  license: MIT
+  # description: Short description of your tool
+  # homepage: https://example.com
+  # license: MIT
 
 go:
-  main: ./cmd/go-package-yourself
+  main: ./cmd/gpy
   # cgo: false
   # ldflags: -X main.version=...
 
@@ -60,8 +60,7 @@ packages:
     packageId: go-package-yourself
 
   docker:
-    enabled: true
-    imageName: go-package-yourself
+    enabled: false
 
 github:
   workflows:
