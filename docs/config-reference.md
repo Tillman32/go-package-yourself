@@ -538,14 +538,14 @@ github:
 #### `github.workflows.workflowFile` (Optional)
 
 **Type:** string  
-**Default:** `".github/workflows/release.yml"`
+**Default:** `".github/workflows/gpy-release.yaml"`
 
 Output path for the GitHub Actions workflow file.
 
 ```yaml
 github:
   workflows:
-    workflowFile: ".github/workflows/release.yml"
+    workflowFile: ".github/workflows/gpy-release.yaml"
 ```
 
 The file is written when you run `gpy workflow --write`.
@@ -663,7 +663,7 @@ packages:
 github:
   workflows:
     enabled: true
-    workflowFile: ".github/workflows/release.yml"
+    workflowFile: ".github/workflows/gpy-release.yaml"
     tagPatterns: ["release-*"]
 ```
 
@@ -866,5 +866,5 @@ After `npm install -g @myorg/mycli`, users run `mycli` (not `@myorg/mycli`).
 | `packages.chocolatey.packageId` | `project.name` |
 | `packages.chocolatey.authors` | Empty string |
 | `github.workflows.enabled` | `false` |
-| `github.workflows.workflowFile` | `".github/workflows/release.yml"` |
+| `github.workflows.workflowFile` | `".github/workflows/gpy-release.yaml"` |
 | `github.workflows.tagPatterns` | `["v*"]` |

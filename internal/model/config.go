@@ -133,7 +133,7 @@ type GitHub struct {
 
 // GitHubWorkflows contains GitHub Actions workflow generation configuration.
 type GitHubWorkflows struct {
-	Enabled      bool     `yaml:"enabled"`      // default false
-	WorkflowFile string   `yaml:"workflowFile"` // path to workflow file (default ".github/workflows/release.yml")
+	Enabled      bool     `yaml:"enabled"`      // default true
+	WorkflowFile string   `yaml:"workflowFile"` // path to workflow file (default ".github/workflows/gpy-release.yaml")
 	TagPatterns  []string `yaml:"tagPatterns"`  // patterns for workflow trigger (default ["v*"])
 }

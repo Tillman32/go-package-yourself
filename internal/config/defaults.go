@@ -85,4 +85,8 @@ func ApplyDefaults(cfg *model.Config) {
 
 	// GitHub defaults
 	cfg.GitHub.Workflows.Enabled = true // Enable workflows by default
+	if cfg.GitHub.Workflows.WorkflowFile == "" {
+		// Use gpy- prefix to avoid collision with existing user release workflows
+		cfg.GitHub.Workflows.WorkflowFile = ".github/workflows/gpy-release.yaml"
+	}
 }

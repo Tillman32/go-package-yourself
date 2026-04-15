@@ -204,8 +204,8 @@ func TestYAMLSyntaxValid(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
-				Enabled:      true,
-				WorkflowFile: ".github/workflows/release.yml",
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
+				Enabled: true,
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -294,8 +294,8 @@ func TestWorkflowHasAllPlatforms(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
-				Enabled:      true,
-				WorkflowFile: ".github/workflows/release.yml",
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
+				Enabled: true,
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -403,8 +403,8 @@ func TestDeterministicOutput(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
-				Enabled:      true,
-				WorkflowFile: ".github/workflows/release.yml",
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
+				Enabled: true,
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -507,6 +507,7 @@ func TestTagPatterns(t *testing.T) {
 			},
 			GitHub: model.GitHub{
 				Workflows: model.GitHubWorkflows{
+					WorkflowFile: ".github/workflows/gpy-release.yaml",
 					TagPatterns: test.patterns,
 				},
 			},
@@ -580,6 +581,7 @@ func TestLDFlagsHandling(t *testing.T) {
 			},
 			GitHub: model.GitHub{
 				Workflows: model.GitHubWorkflows{
+					WorkflowFile: ".github/workflows/gpy-release.yaml",
 					TagPatterns: []string{"v*"},
 				},
 			},
@@ -651,7 +653,7 @@ func TestFileOutput(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
-				WorkflowFile: ".github/workflows/release.yml",
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 			},
 		},
 	}
@@ -684,7 +686,7 @@ func TestFileOutput(t *testing.T) {
 
 	output := outputs[0]
 
-	if output.Path != ".github/workflows/package-release.yaml" {
+	if output.Path != ".github/workflows/gpy-release.yaml" {
 		t.Errorf("Path = %q, want %q", output.Path, ".github/workflows/package-release.yaml")
 	}
 
@@ -728,6 +730,7 @@ func TestWorkflow_DockerJobPresent(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 				TagPatterns: []string{"v*"},
 			},
 		},
@@ -812,6 +815,7 @@ func TestWorkflow_DockerJobAbsent(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 				TagPatterns: []string{"v*"},
 			},
 		},
@@ -895,6 +899,7 @@ func TestWorkflow_NpmJobPresent(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 				TagPatterns: []string{"v*"},
 			},
 		},
@@ -974,6 +979,7 @@ func TestWorkflow_HomebrewJobPresent(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 				TagPatterns: []string{"v*"},
 			},
 		},
@@ -1052,6 +1058,7 @@ func TestWorkflow_ChocolateyJobPresent(t *testing.T) {
 		},
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 				TagPatterns: []string{"v*"},
 			},
 		},
@@ -1096,5 +1103,92 @@ func TestWorkflow_ChocolateyJobPresent(t *testing.T) {
 
 	if publishChocolateyJob.RunsOn != "windows-latest" {
 		t.Errorf("publish-chocolatey job RunsOn = %q, want %q", publishChocolateyJob.RunsOn, "windows-latest")
+	}
+}
+
+// TestWorkflowCallTrigger tests that the generated workflow includes workflow_call trigger for reusability.
+func TestWorkflowCallTrigger(t *testing.T) {
+	cfg := &model.Config{
+		Project: model.Project{
+			Name: "mytool",
+			Repo: "owner/mytool",
+		},
+		Go: model.Go{
+			Main:    "./cmd/mytool",
+			LDFlags: "-s -w",
+		},
+		Release: model.Release{
+			TagTemplate: "v{{version}}",
+			Platforms: []model.Platform{
+				{OS: "linux", Arch: "amd64"},
+			},
+			Archive: model.Archive{
+				NameTemplate: "{{name}}_{{version}}_{{os}}_{{arch}}",
+				Format: model.ArchiveFormat{
+					Default: "tar.gz",
+				},
+				BinPathInArchive: "{{name}}",
+			},
+			Checksums: model.Checksums{
+				File:      "checksums.txt",
+				Algorithm: "sha256",
+				Format:    "goreleaser",
+			},
+		},
+		GitHub: model.GitHub{
+			Workflows: model.GitHubWorkflows{
+				Enabled:      true,
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
+				TagPatterns:  []string{"v*"},
+			},
+		},
+	}
+
+	ctx := generator.Context{
+		Config:  cfg,
+		Version: "",
+		ArchiveName: func(os, arch string) (archiveFilename, binPathInArchive string, err error) {
+			params := naming.ArchiveNameParams{
+				Name:                cfg.Project.Name,
+				Version:             "1.0.0",
+				OS:                  os,
+				Arch:                arch,
+				Format:              "tar.gz",
+				ArchiveNameTemplate: cfg.Release.Archive.NameTemplate,
+				BinPathTemplate:     cfg.Release.Archive.BinPathInArchive,
+			}
+			return naming.ArchiveName(params)
+		},
+	}
+
+	gen := New()
+	outputs, err := gen.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	if len(outputs) != 1 {
+		t.Fatalf("expected 1 FileOutput, got %d", len(outputs))
+	}
+
+	// Parse YAML and verify workflow_call trigger is present
+	var doc map[string]interface{}
+	if err := yaml.Unmarshal(outputs[0].Content, &doc); err != nil {
+		t.Fatalf("YAML syntax error: %v", err)
+	}
+
+	onTriggers, ok := doc["on"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("'on' field is not a map")
+	}
+
+	// Verify push trigger exists
+	if _, hasPush := onTriggers["push"]; !hasPush {
+		t.Errorf("'on' is missing 'push' trigger")
+	}
+
+	// Verify workflow_call trigger exists (makes it reusable)
+	if _, hasWorkflowCall := onTriggers["workflow_call"]; !hasWorkflowCall {
+		t.Errorf("'on' is missing 'workflow_call' trigger - workflow is not reusable")
 	}
 }

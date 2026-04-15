@@ -59,7 +59,7 @@ gpy generates four files:
 go run github.com/brandon/go-package-yourself@latest workflow --write
 ```
 
-Creates `.github/workflows/release.yml` to auto-build and release on tag push.
+Creates `.github/workflows/gpy-release.yaml` to auto-build and release on tag push. The workflow is reusable, so it can also be called from other workflows.
 
 ---
 
@@ -186,11 +186,12 @@ Generates npm, homebrew, and chocolatey package files:
 gpy workflow [--config <path>] [--project-root <path>] [--write]
 ```
 
-Generates GitHub Actions workflow YAML (`.github/workflows/release.yml`):
+Generates GitHub Actions workflow YAML (`.github/workflows/gpy-release.yaml`):
 - Matrix strategy for all configured platforms
 - Automatic binary builds and archiving
 - Checksum generation (SHA256)
 - GitHub Release upload
+- Reusable workflow support (can be called from other workflows)
 
 **Flags:**
 - `--config <path>`: Explicit config file (default: auto-discover)

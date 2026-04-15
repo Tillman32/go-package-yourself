@@ -60,8 +60,11 @@ func (w *WorkflowGenerator) Generate(ctx generator.Context) ([]generator.FileOut
 		return nil, fmt.Errorf("marshal workflow to YAML: %w", err)
 	}
 
-	// Use standard GitHub Actions workflow path
-	workflowFile := ".github/workflows/package-release.yaml"
+	// Use workflow file path from config
+	workflowFile := ctx.Config.GitHub.Workflows.WorkflowFile
+	if workflowFile == "" {
+		return nil, fmt.Errorf("WorkflowFile not set in config (should have been set by ApplyDefaults)")
+	}
 
 	return []generator.FileOutput{
 		{
@@ -138,7 +141,8 @@ type WorkflowDoc struct {
 
 // WorkflowTrigger defines what events trigger the workflow.
 type WorkflowTrigger struct {
-	Push PushTrigger `yaml:"push"`
+	Push         PushTrigger `yaml:"push"`
+	WorkflowCall interface{} `yaml:"workflow_call,omitempty"` // Empty object enables reusable workflow
 }
 
 // PushTrigger defines push-based triggers.
@@ -260,6 +264,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 			Push: PushTrigger{
 				Tags: tagPatterns,
 			},
+			WorkflowCall: struct{}{}, // Enable workflow_call for reusability
 		},
 		Jobs: jobs,
 	}

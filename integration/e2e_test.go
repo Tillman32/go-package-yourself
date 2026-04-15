@@ -70,8 +70,8 @@ func TestGpyWorkflowWrite(t *testing.T) {
 		t.Fatalf("gpy workflow --write failed: %v", err)
 	}
 
-	// Verify workflow file was created
-	workflowPath := filepath.Join(tmpdir, ".github", "workflows", "release.yml")
+	// Verify workflow file was created at the new path (gpy-release.yaml)
+	workflowPath := filepath.Join(tmpdir, ".github", "workflows", "gpy-release.yaml")
 	AssertFileExists(t, workflowPath)
 
 	// Verify the directory structure

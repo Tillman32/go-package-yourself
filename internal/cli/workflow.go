@@ -66,10 +66,10 @@ func Workflow(opts *GlobalOpts, args []string) error {
 	workflowYAML := string(workflowOutput.Content)
 
 	if *write {
-		// Use configured workflow file path (default to release.yml)
+		// Use configured workflow file path (should be set by ApplyDefaults)
 		workflowFilePath := cfg.GitHub.Workflows.WorkflowFile
 		if workflowFilePath == "" {
-			workflowFilePath = ".github/workflows/release.yml"
+			return fmt.Errorf("WorkflowFile not configured (should have been set by config defaults)")
 		}
 		workflowPath := filepath.Join(absProjectRoot, workflowFilePath)
 		dir := filepath.Dir(workflowPath)
@@ -125,9 +125,9 @@ Global flags:
   --project-root <path>  Project root directory (default: current working directory)
 
 Examples:
-  gpy workflow          # Print workflow YAML to stdout
-  gpy workflow --write  # Write workflow to .github/workflows/release.yml
-  gpy --project-root /path/to/project workflow --write
+   gpy workflow          # Print workflow YAML to stdout
+   gpy workflow --write  # Write workflow to .github/workflows/gpy-release.yaml
+   gpy --project-root /path/to/project workflow --write
 
 Description:
   Generates a GitHub Actions workflow file for automating releases.

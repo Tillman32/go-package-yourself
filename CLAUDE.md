@@ -29,7 +29,7 @@ go test -short ./integration     # Skip slow E2E tests
 ./gpy package                    # Generate npm/homebrew/chocolatey artifacts
 ./gpy package --only npm         # Generate a subset
 ./gpy workflow                   # Print GitHub Actions workflow to stdout
-./gpy workflow --write           # Write .github/workflows/release.yml
+./gpy workflow --write           # Write .github/workflows/gpy-release.yaml
 ```
 
 ---

@@ -1,0 +1,33 @@
+?   	go-package-yourself/cmd/gpy	[no test files]
+--- FAIL: TestGpyWorkflowWrite (0.02s)
+    e2e_test.go:75: file /var/folders/1s/k5cy49yd0fddzbvm4b6s6hsh0000gn/T/TestGpyWorkflowWrite1663267396/001/.github/workflows/gpy-release.yaml does not exist: stat /var/folders/1s/k5cy49yd0fddzbvm4b6s6hsh0000gn/T/TestGpyWorkflowWrite1663267396/001/.github/workflows/gpy-release.yaml: no such file or directory
+FAIL
+FAIL	go-package-yourself/integration	1.011s
+?   	go-package-yourself/internal/cli	[no test files]
+ok  	go-package-yourself/internal/config	1.457s
+?   	go-package-yourself/internal/generator	[no test files]
+ok  	go-package-yourself/internal/generator/chocolatey	(cached)
+ok  	go-package-yourself/internal/generator/docker	(cached)
+ok  	go-package-yourself/internal/generator/homebrew	(cached)
+ok  	go-package-yourself/internal/generator/npm	(cached)
+--- FAIL: TestTagPatterns (0.00s)
+    generate_test.go:534: default: Generate failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+--- FAIL: TestLDFlagsHandling (0.00s)
+    generate_test.go:607: with-ldflags: Generate failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+--- FAIL: TestWorkflow_DockerJobPresent (0.00s)
+    generate_test.go:755: Generate() failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+--- FAIL: TestWorkflow_DockerJobAbsent (0.00s)
+    generate_test.go:839: Generate() failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+--- FAIL: TestWorkflow_NpmJobPresent (0.00s)
+    generate_test.go:922: Generate() failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+--- FAIL: TestWorkflow_HomebrewJobPresent (0.00s)
+    generate_test.go:1001: Generate() failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+--- FAIL: TestWorkflow_ChocolateyJobPresent (0.00s)
+    generate_test.go:1079: Generate() failed: WorkflowFile not set in config (should have been set by ApplyDefaults)
+FAIL
+FAIL	go-package-yourself/internal/generator/workflow	0.902s
+ok  	go-package-yourself/internal/model	(cached)
+ok  	go-package-yourself/internal/naming	(cached)
+ok  	go-package-yourself/internal/templatex	(cached)
+ok  	go-package-yourself/internal/validate	(cached)
+FAIL
