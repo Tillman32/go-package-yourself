@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,6 +48,49 @@ func main() { println("testapp") }
 	// Verify packaging artifacts were generated
 	AssertDirExists(t, filepath.Join(tmpdir, "packaging"))
 	AssertFileExists(t, filepath.Join(tmpdir, "packaging", "npm", "testapp", "package.json"))
+}
+
+// TestGpyInitAutoGeneratesWorkflow tests that gpy init auto-generates GitHub Actions workflow.
+func TestGpyInitAutoGeneratesWorkflow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping E2E test in short mode")
+	}
+
+	tmpdir := t.TempDir()
+	defer SwitchDir(t, tmpdir)()
+
+	// Create basic project structure for init to work
+	cmdDir := filepath.Join(tmpdir, "cmd", "testapp")
+	if err := createDirsIfNotExist(cmdDir); err != nil {
+		t.Fatalf("failed to create cmd directory: %v", err)
+	}
+
+	mainGo := `package main
+func main() { println("testapp") }
+`
+	if err := writeFile(filepath.Join(cmdDir, "main.go"), mainGo); err != nil {
+		t.Fatalf("failed to write main.go: %v", err)
+	}
+
+	// Run gpy init --yes
+	_, err := RunGpy(t, tmpdir, "--yes", "init")
+	if err != nil {
+		t.Fatalf("gpy init --yes failed: %v", err)
+	}
+
+	// Verify config file was created
+	AssertFileExists(t, filepath.Join(tmpdir, "gpy.yaml"))
+
+	// Verify workflow file was auto-generated at the correct path
+	workflowPath := filepath.Join(tmpdir, ".github", "workflows", "gpy-release.yaml")
+	AssertFileExists(t, workflowPath)
+
+	// Verify the workflow is valid YAML
+	AssertValidYAML(t, workflowPath)
+
+	// Verify workflow directories were created
+	AssertDirExists(t, filepath.Join(tmpdir, ".github"))
+	AssertDirExists(t, filepath.Join(tmpdir, ".github", "workflows"))
 }
 
 // TestGpyWorkflowWrite tests gpy workflow with --write flag.
@@ -286,6 +330,72 @@ go:
 
 	// Verify it used the correct config
 	AssertFileExists(t, filepath.Join(tmpdir, "packaging", "npm", "customapp", "package.json"))
+}
+
+// TestGpyPackageSyncFlag tests the --sync flag for regenerating artifacts.
+func TestGpyPackageSyncFlag(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping E2E test in short mode")
+	}
+
+	tmpdir := CreateMinimalProject(t)
+	defer SwitchDir(t, tmpdir)()
+
+	// Generate packages first time
+	_, err := RunGpy(t, tmpdir, "package")
+	if err != nil {
+		t.Fatalf("gpy package failed: %v", err)
+	}
+
+	// Verify initial artifacts exist
+	npmPackageJson := filepath.Join(tmpdir, "packaging", "npm", "testapp", "package.json")
+	AssertFileExists(t, npmPackageJson)
+
+	// Regenerate with --sync
+	_, err = RunGpy(t, tmpdir, "package", "--sync")
+	if err != nil {
+		t.Fatalf("gpy package --sync failed: %v", err)
+	}
+
+	// Verify artifacts still exist after sync
+	AssertFileExists(t, npmPackageJson)
+	content := ReadFile(t, npmPackageJson)
+
+	// Verify that package.json contains valid JSON
+	var pkgData map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &pkgData); err != nil {
+		t.Fatalf("regenerated package.json is not valid JSON: %v", err)
+	}
+}
+
+// TestGpyWorkflowSyncFlag tests the --sync flag for regenerating workflow.
+func TestGpyWorkflowSyncFlag(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping E2E test in short mode")
+	}
+
+	tmpdir := CreateMinimalProject(t)
+	defer SwitchDir(t, tmpdir)()
+
+	// Generate workflow first time
+	_, err := RunGpy(t, tmpdir, "workflow", "--write")
+	if err != nil {
+		t.Fatalf("gpy workflow --write failed: %v", err)
+	}
+
+	// Verify initial workflow exists
+	workflowPath := filepath.Join(tmpdir, ".github", "workflows", "gpy-release.yaml")
+	AssertFileExists(t, workflowPath)
+
+	// Regenerate with --sync
+	_, err = RunGpy(t, tmpdir, "workflow", "--sync")
+	if err != nil {
+		t.Fatalf("gpy workflow --sync failed: %v", err)
+	}
+
+	// Verify workflow still exists and is valid
+	AssertFileExists(t, workflowPath)
+	AssertValidYAML(t, workflowPath)
 }
 
 // Helper functions

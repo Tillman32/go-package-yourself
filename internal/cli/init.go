@@ -76,7 +76,7 @@ func Init(opts *GlobalOpts, args []string) error {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				Enabled:      true,
-				WorkflowFile: ".github/workflows/release.yml",
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -423,7 +423,9 @@ github:
     enabled: `)
 	yamlData.WriteString(fmt.Sprintf("%v", cfg.GitHub.Workflows.Enabled))
 	yamlData.WriteString(`
-    workflowFile: .github/workflows/release.yml
+    workflowFile: `)
+	yamlData.WriteString(cfg.GitHub.Workflows.WorkflowFile)
+	yamlData.WriteString(`
     tagPatterns: ["v*"]
 `)
 
