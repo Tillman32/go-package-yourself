@@ -1,0 +1,20 @@
+{
+  "bin": {
+    "testapp": "index.js"
+  },
+  "description": "Test application",
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "",
+  "license": "",
+  "main": "index.js",
+  "name": "testapp",
+  "postinstall": "node install.js",
+  "preferGlobal": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/testuser/testapp"
+  },
+  "version": "1.0.0"
+}

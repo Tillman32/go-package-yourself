@@ -1,0 +1,7 @@
+schemaVersion: 1
+project:
+  name: testapp
+  repo: testuser/testapp
+  description: "Test application"
+go:
+  main: ./cmd/testapp

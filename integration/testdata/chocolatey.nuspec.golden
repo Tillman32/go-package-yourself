@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>testapp</id>
+    <title>testapp</title>
+    <version>1.0.0</version>
+    <authors>testuser</authors>
+    <projectUrl>https://github.com/testuser/testapp</projectUrl>
+    <projectSourceUrl>https://github.com/testuser/testapp</projectSourceUrl>
+    <packageSourceUrl>https://github.com/testuser/testapp/tree/main/packaging/chocolatey/testapp</packageSourceUrl>
+    <description>Test application</description>
+    <summary>Test application for Chocolatey</summary>
+    <tags>cli command-line</tags>
+    <licenseUrl>https://github.com/testuser/testapp/blob/main/LICENSE</licenseUrl>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

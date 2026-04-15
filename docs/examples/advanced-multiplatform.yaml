@@ -1,0 +1,232 @@
+# Advanced Multi-Platform - gpy Configuration Example
+#
+# Use this as a template for sophisticated CLI tools with custom platforms,
+# version embedding, and organization-scoped packages.
+#
+# Example project: Enterprise build orchestration tool with custom naming,
+# version embedding via ldflags, and organization-scoped distribution.
+
+schemaVersion: 1
+
+project:
+  name: buildtool
+  repo: acme/buildtool
+  description: "ACME's build orchestration platform - fast, parallel, and cross-platform"
+  homepage: "https://buildtool.acme.internal"
+  license: "Apache-2.0"
+
+go:
+  main: ./cmd/buildtool
+  cgo: false
+  # Embed version and build time in binary
+  ldflags: "-X main.Version={{version}} -X main.BuildTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+release:
+  # Custom tag template for release versioning
+  tagTemplate: "release-{{version}}"
+
+  # Custom platform targeting: macOS (both arch) + Linux (both arch) + Windows (amd64 only)
+  # This is more selective than defaults (e.g., no Linux ARM for this tool)
+  platforms:
+    - os: darwin
+      arch: amd64
+    - os: darwin
+      arch: arm64
+    - os: linux
+      arch: amd64
+    - os: linux
+      arch: arm64
+    - os: windows
+      arch: amd64
+
+  archive:
+    # Custom archive naming with platform indicators
+    nameTemplate: "{{name}}-{{version}}-{{os}}-{{arch}}"
+
+    format:
+      default: "tar.gz"
+      windows: "zip"
+
+    # Binary location inside archive (custom subdirectory)
+    binPathInArchive: "bin/{{name}}"
+
+  checksums:
+    file: "checksums.txt"
+    algorithm: "sha256"  # (fixed in v1)
+    format: "goreleaser"  # (fixed in v1)
+
+packages:
+  npm:
+    enabled: true
+    # Organization-scoped package for npm registry
+    packageName: "@acme/buildtool"
+    # Executable name (what users run after global install)
+    binName: "buildtool"
+    # Require modern Node.js (ES2020+ features available)
+    nodeEngines: ">=18.0"
+
+  homebrew:
+    enabled: true
+    # Organization tap (repository) for Homebrew
+    tap: "acme/homebrew-tools"
+    # Custom formula name (install via `brew install BuildTool`)
+    formulaName: "BuildTool"
+
+  chocolatey:
+    enabled: true
+    # Windows package ID (install via `choco install acme-buildtool`)
+    packageId: "acme-buildtool"
+    # Author name for .nuspec metadata
+    authors: "ACME Corp Engineering"
+
+github:
+  workflows:
+    enabled: true
+    # Custom workflow file path
+    workflowFile: ".github/workflows/release.yml"
+    # Custom tag patterns to trigger releases
+    tagPatterns: ["release-*"]
+
+---
+
+# Generated Output Files:
+#
+# When you run `gpy package`, this config generates:
+#
+# 1. package.json
+#    - Scoped package: @acme/buildtool
+#    - Binary name: buildtool
+#    - Requires Node.js >= 18.0
+#    - SHA256 verification enabled
+#    - Install: npm install -g @acme/buildtool
+#    - Run: buildtool --help
+#
+# 2. homebrew.rb
+#    - Formula: BuildTool
+#    - Tap: acme/homebrew-tools
+#    - Platform-specific build blocks for arm64 and amd64
+#    - Install: brew tap acme/homebrew-tools && brew install BuildTool
+#
+# 3. chocolatey.ps1
+#    - Package ID: acme-buildtool
+#    - PowerShell SHA256 verification
+#    - .nuspec metadata with author "ACME Corp Engineering"
+#
+# 4. checksums.txt
+#    - SHA256 hashes for all archives
+#    - goreleaser format
+#
+# Archive names generated:
+#    - buildtool-1.2.3-darwin-amd64.tar.gz
+#    - buildtool-1.2.3-darwin-arm64.tar.gz
+#    - buildtool-1.2.3-linux-amd64.tar.gz
+#    - buildtool-1.2.3-linux-arm64.tar.gz
+#    - buildtool-1.2.3-windows-amd64.zip
+#
+# Binary location inside each archive:
+#    - bin/buildtool
+
+---
+
+# Usage:
+#
+# 1. Place this file in your project root as `gpy.yaml`
+#
+# 2. Generate packages:
+#    go run github.com/brandon/go-package-yourself@latest package
+#
+# 3. Review generated files
+#
+# 4. Release process:
+#    git tag release-1.2.3
+#    git push origin release-1.2.3
+#    (GitHub Actions picks up `release-*` pattern and auto-builds + releases)
+#
+# 5. Users install from:
+#    - npm: npm install -g @acme/buildtool
+#    - Homebrew: brew tap acme/homebrew-tools && brew install BuildTool
+#    - Chocolatey: choco install acme-buildtool
+
+---
+
+# Key Custom Features:
+#
+# 1. Version Embedding
+#    - ldflags: "-X main.Version={{version}}"
+#    - Binary automatically reports correct version
+#    - GitHub Actions sets version from git tag
+#
+# 2. Custom Naming
+#    - nameTemplate: "{{name}}-{{version}}-{{os}}-{{arch}}"
+#    - binPathInArchive: "bin/{{name}}"
+#    - Archives follow company convention (dash separator)
+#
+# 3. Platform Selectivity
+#    - Only darwin, linux, windows amd64/arm64
+#    - No 32-bit support (amd64i386, arm32, etc.)
+#    - Reduces build time and binary size
+#
+# 4. Organization Scoping
+#    - npm: @acme/buildtool (owned by org)
+#    - Homebrew: acme/homebrew-tools (custom tap)
+#    - Chocolatey: acme-buildtool (organization prefix)
+#
+# 5. Tag Pattern Matching
+#    - tagPatterns: ["release-*"]
+#    - Triggered by tags like: release-1.0.0, release-2.5.1
+#    - Different from default "v*" pattern
+#
+# 6. Custom Binary Path
+#    - binPathInArchive: "bin/{{name}}"
+#    - Archives contain: bin/buildtool
+#    - Matches company packaging convention
+
+---
+
+# Comparison with Minimal Config:
+#
+# This config differs from simple-cli.yaml in:
+#
+# | Feature | Simple | Advanced |
+# |---------|--------|----------|
+# | Platforms | 5 (all defaults) | 5 (custom selected) |
+# | Version embedding | No | Yes (ldflags) |
+# | Archive naming | Default | Custom dash separator |
+# | npm package | `mycli` | `@acme/buildtool` |
+# | Homebrew tap | Direct from releases | Custom tap |
+# | Tag pattern | v* | release-* |
+# | Binary path in archive | Root (default) | bin/ (custom) |
+#
+# Both configs generate the same types of artifacts,
+# but this one adds customization for enterprise use.
+
+---
+
+# Extending Further:
+#
+# To support additional platforms:
+#
+# platforms:
+#   - os: darwin
+#     arch: amd64
+#   - os: darwin
+#     arch: arm64
+#   - os: linux
+#     arch: amd64
+#   - os: linux
+#     arch: arm64
+#   - os: windows
+#     arch: amd64
+#   # Add FreeBSD support (if your Go code supports it)
+#   # - os: freebsd
+#   #   arch: amd64
+#
+# To disable npm entirely:
+#
+# packages:
+#   npm:
+#     enabled: false  # Skip npm package generation
+#   homebrew:
+#     enabled: true
+#   chocolatey:
+#     enabled: true

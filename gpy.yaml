@@ -1,0 +1,70 @@
+# go-package-yourself configuration
+# See: https://github.com/Tillman32/go-package-yourself for documentation
+#
+# This file configures artifact generation for:
+# - npm/npx packages
+# - Homebrew formulas
+# - Chocolatey packages
+# - GitHub Actions workflows for releases
+
+schemaVersion: 1
+
+project:
+  name: go-package-yourself
+  repo: Tillman32/go-package-yourself
+  description: "Go Package Yourself: Generate npm, Homebrew, Chocolatey packages for your Go CLI tool"
+  homepage: https://github.com/Tillman32/go-package-yourself
+  license: MIT
+
+go:
+  main: ./cmd/go-package-yourself
+  # cgo: false
+  # ldflags: -X main.version=...
+
+release:
+  tagTemplate: v{{version}}
+  platforms:
+    - os: darwin
+      arch: amd64
+    - os: darwin
+      arch: arm64
+    - os: linux
+      arch: amd64
+    - os: linux
+      arch: arm64
+    - os: windows
+      arch: amd64
+  archive:
+    nameTemplate: '{{name}}_{{version}}_{{os}}_{{arch}}'
+    format:
+      default: tar.gz
+      windows: zip
+    binPathInArchive: '{{name}}'
+  checksums:
+    file: checksums.txt
+    algorithm: sha256
+    format: goreleaser
+
+packages:
+  npm:
+    enabled: true
+    packageName: go-package-yourself
+    nodeEngines: ">=18"
+
+  homebrew:
+    enabled: true
+    formulaName: GoPackageYourself
+
+  chocolatey:
+    enabled: true
+    packageId: go-package-yourself
+
+  docker:
+    enabled: true
+    imageName: go-package-yourself
+
+github:
+  workflows:
+    enabled: true
+    workflowFile: .github/workflows/release.yml
+    tagPatterns: ["v*"]

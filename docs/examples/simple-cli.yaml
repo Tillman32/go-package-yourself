@@ -1,0 +1,140 @@
+# Simple CLI Tool - gpy Configuration Example
+#
+# Use this as a template for a straightforward CLI tool with all package managers enabled.
+# This config generates npm, Homebrew, and Chocolatey packages with minimal customization.
+#
+# Example project: A simple command-line tool with standard settings across all platforms.
+
+schemaVersion: 1
+
+project:
+  name: mycli
+  repo: myorg/mycli
+  description: "A simple CLI tool that does something useful"
+  homepage: "https://github.com/myorg/mycli"
+  license: "MIT"
+
+go:
+  main: ./cmd/mycli
+  # cgo: false  # (default)
+
+packages:
+  npm:
+    enabled: true
+    # Uses defaults:
+    # - packageName: "mycli"
+    # - binName: "mycli"
+    # - nodeEngines: ">=18"
+
+  homebrew:
+    enabled: true
+    # Uses defaults:
+    # - formulaName: "mycli"
+    # - tap: (not set, install from GitHub Releases directly)
+
+  chocolatey:
+    enabled: true
+    # Uses defaults:
+    # - packageId: "mycli"
+    # - authors: (not set)
+
+# github:
+#   workflows:
+#     enabled: true
+#     # Uses defaults:
+#     # - workflowFile: ".github/workflows/release.yml"
+#     # - tagPatterns: ["v*"]
+
+---
+
+# Generated Output Files:
+#
+# When you run `gpy package`, this config generates:
+#
+# 1. package.json
+#    - npm launcher package
+#    - downloads binary from GitHub Release
+#    - verifies SHA256 before execution
+#    - installs globally: `npm install -g mycli`
+#    - run: `mycli --help`
+#
+# 2. homebrew.rb
+#    - Homebrew formula
+#    - install via: `brew install mycli`
+#    - run: `mycli --help`
+#
+# 3. chocolatey.ps1
+#    - Chocolatey package spec
+#    - install via: `choco install mycli`
+#    - run: `mycli --help`
+#
+# 4. checksums.txt
+#    - SHA256 verification file
+#    - goreleaser format
+#    - used by npm launcher for integrity check
+
+---
+
+# Usage:
+#
+# 1. Place this file in your project root as `gpy.yaml`
+#
+# 2. Generate packages:
+#    go run github.com/brandon/go-package-yourself@latest package
+#
+# 3. Review generated files:
+#    ls -la package.json homebrew.rb chocolatey.ps1 checksums.txt
+#
+# 4. Test npm package locally:
+#    npm link
+#    mycli --help
+#
+# 5. Release:
+#    git tag v1.0.0
+#    git push origin v1.0.0
+#    (GitHub Actions workflow builds and releases automatically)
+
+---
+
+# Customization:
+#
+# For more control, enable optional fields:
+#
+# packages:
+#   npm:
+#     enabled: true
+#     packageName: "@myorg/mycli"  # Scoped package
+#     nodeEngines: ">=16"            # Support older Node.js
+#
+#   homebrew:
+#     enabled: true
+#     tap: "myorg/homebrew-tools"   # Install from custom tap
+#
+#   chocolatey:
+#     enabled: true
+#     authors: "My Organization"    # Set author name
+#
+# See docs/config-reference.md for all available options.
+
+---
+
+# Default Platform Targets
+#
+# This config uses default platforms (no custom platforms specified):
+#
+# platforms:
+#   - os: darwin      # macOS
+#     arch: amd64
+#   - os: darwin      # macOS (Apple Silicon)
+#     arch: arm64
+#   - os: linux       # Linux 64-bit
+#     arch: amd64
+#   - os: linux       # Linux ARM (Raspberry Pi, etc.)
+#     arch: arm64
+#   - os: windows     # Windows 64-bit
+#     arch: amd64
+#
+# All binaries are cross-compiled via GitHub Actions (release.yml).
+# Archives:
+#   - macOS/Linux: tar.gz
+#   - Windows: zip

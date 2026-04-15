@@ -1,0 +1,19 @@
+class Testapp < Formula
+  desc "Test application"
+  homepage "https://example.com"
+  url "https://github.com/testuser/testapp/releases/download/v1.0.0/testapp_1.0.0_darwin_amd64.tar.gz"
+  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  head "https://github.com/testuser/testapp.git", branch: "main"
+
+  def install
+    bin.install "testapp"
+  end
+
+  def post_install
+    puts "testapp installed successfully"
+  end
+
+  test do
+    system "#{bin}/testapp"
+  end
+end

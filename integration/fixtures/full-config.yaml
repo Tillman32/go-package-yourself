@@ -1,0 +1,54 @@
+schemaVersion: 1
+project:
+  name: fullapp
+  repo: owner/fullapp
+  description: "Full-featured test application"
+  homepage: https://example.com
+  license: MIT
+go:
+  main: ./cmd/fullapp
+  cgo: false
+  ldflags: "-s -w"
+release:
+  tagTemplate: "release-{{version}}"
+  platforms:
+    - os: darwin
+      arch: amd64
+    - os: darwin
+      arch: arm64
+    - os: linux
+      arch: amd64
+    - os: linux
+      arch: arm64
+    - os: windows
+      arch: amd64
+  archive:
+    nameTemplate: "{{name}}_{{version}}_{{os}}_{{arch}}"
+    binPathInArchive: "bin/{{name}}"
+    format:
+      default: tar.gz
+      windows: zip
+  checksums:
+    file: checksums.txt
+    algorithm: sha256
+    format: goreleaser
+packages:
+  npm:
+    enabled: true
+    packageName: fullapp
+    binName: fullapp
+    nodeEngines: ">=16"
+  homebrew:
+    enabled: true
+    tap: owner/homebrew-fullapp
+    folderName: fullapp
+  chocolatey:
+    enabled: true
+    packageName: fullapp
+github:
+  workflows:
+    enabled: true
+    paths:
+      - "**/*.go"
+      - go.mod
+      - go.sum
