@@ -127,6 +127,44 @@ See the [Frozen v1 Contracts](ARCHITECTURE.md#frozen-v1-contracts) section in AR
 
 ---
 
+## Planning & Execution Workflow
+
+**All non-trivial changes must follow this two-session pattern to manage context efficiently:**
+
+1. **Planning Session (THIS SESSION)**
+   - Research the problem and gather context
+   - Create a detailed plan file in `.tmp/plans/` (e.g., `.tmp/plans/feature-name.md`)
+   - Document scope, tasks, testing strategy, and success criteria
+   - Commit the plan mentally, but don't execute it in the same session
+   - Reason: Plan files can be 2-5KB, implementation spans 5-10 code changes; combined context would exceed limits
+
+2. **Execution Session (SEPARATE SESSION)**
+   - Load the plan file from `.tmp/plans/`
+   - Follow tasks step-by-step
+   - Each implementation task is marked `in_progress` then `completed`
+   - Run tests, commit changes, update docs
+   - Reason: Fresh session preserves context budget for implementation details
+
+**Example:**
+```
+Session 1: "I want to make workflows reusable"
+  → Creates .tmp/plans/workflow-reusability.md (this pattern)
+  
+Session 2: "Execute: .tmp/plans/workflow-reusability.md"
+  → Implements all tasks from the plan
+  → Tests and commits
+```
+
+**For Small Changes** (single file, <50 lines):
+- Implement immediately; no plan needed
+- Example: typo fix, simple constant rename
+
+**For Complex Changes** (>3 files, architectural decisions):
+- Always create a plan file
+- Keeps both sessions focused and efficient
+
+---
+
 ## Reference Docs
 
 | File | Purpose |
@@ -137,3 +175,4 @@ See the [Frozen v1 Contracts](ARCHITECTURE.md#frozen-v1-contracts) section in AR
 | [docs/architecture.md](docs/architecture.md) | Internal architecture guide |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Common errors and fixes |
 | [.claude/decisions.md](.claude/decisions.md) | Key v1 design decisions and rationale |
+| [.tmp/plans/](../.tmp/plans/) | Implementation plans (gitignored, local only) |
