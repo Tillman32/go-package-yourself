@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(No unreleased changes at this time)
+### Added
+
+- **`--sync` flag** — Automatically sync generated artifacts to `gpy.yaml` (available on `package` and `workflow` commands)
+- **Auto-generated workflows in init** — `gpy init` now generates a GitHub Actions workflow file automatically during setup
+- **Reusable workflow support** — GitHub Actions workflows use `workflow_call` trigger for better integration with CI/CD pipelines
+- **Configurable workflow filename** — Workflow generation respects `workflowFilename` config value (defaults to `gpy-release.yaml`)
+
+### Changed
+
+- **Workflow command improvements** — Better defaults and clearer output when generating workflows
 
 ---
 
