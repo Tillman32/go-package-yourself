@@ -52,11 +52,15 @@ jobs:
               with:
                 go-version: "1.22"
             - name: Build binary
-              run: go build -o go-package-yourself -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
               env:
                 GOARCH: ${{ matrix.arch }}
                 GOOS: ${{ matrix.os }}
+              run: go build -o go-package-yourself -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
             - name: Create archive
+              env:
+                ARCHIVE: ${{ matrix.archive }}
+                BIN_PATH: ${{ matrix.bin-path }}
+                EXT: ${{ matrix.ext }}
               run: |-
                 if [ "${{ runner.os }}" = "Windows" ]; then
                   cd "${{ env.BIN_PATH_DIR }}" 2>/dev/null || true
@@ -64,10 +68,6 @@ jobs:
                 else
                   tar czf "${{ env.ARCHIVE }}" "${{ env.BIN_PATH }}"
                 fi
-              env:
-                ARCHIVE: ${{ matrix.archive }}
-                BIN_PATH: ${{ matrix.bin-path }}
-                EXT: ${{ matrix.ext }}
             - name: Generate checksums
               run: |-
                 sha256sum "${{ env.ARCHIVE }}" | sed 's/  .*\//  /' >> checksums.txt
