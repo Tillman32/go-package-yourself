@@ -8,7 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go-package-yourself/internal/generator"
+	"go-package-yourself/internal/generator/workflow"
 	"go-package-yourself/internal/model"
+	"go-package-yourself/internal/naming"
+	"go-package-yourself/internal/templatex"
 )
 
 // Init implements the `gpy init` command.
@@ -97,12 +101,19 @@ func Init(opts *GlobalOpts, args []string) error {
 	}
 
 	fmt.Printf("✓ Created config file: %s\n", configPath)
-	fmt.Printf("✓ Edit the file to customize your configuration\n")
-	fmt.Printf("\nNext steps:\n")
-	fmt.Printf("  1. gpy package          # Generate npm, homebrew, chocolatey, docker artifacts\n")
+
+	// Generate GitHub Actions workflow if enabled
 	if cfg.GitHub.Workflows.Enabled {
-		fmt.Printf("  2. gpy workflow --write # Create GitHub Actions release workflow\n")
+		if err := generateWorkflowFile(cfg, absConfigDir); err != nil {
+			fmt.Printf("⚠ Warning: Failed to auto-generate workflow: %v\n", err)
+		} else {
+			fmt.Printf("✓ Created GitHub Actions workflow\n")
+		}
 	}
+
+	fmt.Printf("✓ Edit the file to customize your configuration\n")
+	fmt.Printf("\nNext step:\n")
+	fmt.Printf("  gpy package          # Generate npm, homebrew, chocolatey, docker artifacts\n")
 	fmt.Printf("\nSee docs at: https://github.com/your/repo\n")
 
 	return nil
@@ -418,6 +429,69 @@ github:
 
 	if err := os.WriteFile(path, []byte(yamlData.String()), 0o644); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// generateWorkflowFile generates and writes the GitHub Actions workflow file.
+func generateWorkflowFile(cfg *model.Config, projectRoot string) error {
+	// Create generator context
+	ctx := generator.Context{
+		Config:      cfg,
+		ProjectRoot: projectRoot,
+		Version:     "", // init doesn't use version
+		ArchiveName: func(os, arch string) (archiveFilename, binPathInArchive string, err error) {
+			params := naming.ArchiveNameParams{
+				Name:                cfg.Project.Name,
+				Version:             "",
+				OS:                  os,
+				Arch:                arch,
+				Format:              cfg.Release.Archive.Format.Default,
+				ArchiveNameTemplate: cfg.Release.Archive.NameTemplate,
+				BinPathTemplate:     cfg.Release.Archive.BinPathInArchive,
+			}
+			if os == "windows" && cfg.Release.Archive.Format.Windows != "" {
+				params.Format = cfg.Release.Archive.Format.Windows
+			}
+			return naming.ArchiveName(params)
+		},
+		RenderTemplate: func(template, fieldPath string) (string, error) {
+			renderer := &templatex.Renderer{
+				Data: map[string]string{
+					"name":    cfg.Project.Name,
+					"version": "",
+				},
+			}
+			return renderer.RenderWithFieldPath(template, fieldPath)
+		},
+	}
+
+	// Generate workflow
+	gen := workflow.New()
+	outputs, err := gen.Generate(ctx)
+	if err != nil {
+		return fmt.Errorf("workflow generation failed: %w", err)
+	}
+
+	if len(outputs) == 0 {
+		return fmt.Errorf("workflow generation produced no output")
+	}
+
+	// Write workflow file
+	for _, output := range outputs {
+		path := filepath.Join(projectRoot, output.Path)
+		dir := filepath.Dir(path)
+
+		// Create directory if needed
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("failed to create workflow directory %q: %w", dir, err)
+		}
+
+		// Write file
+		if err := os.WriteFile(path, output.Content, output.Mode); err != nil {
+			return fmt.Errorf("failed to write workflow file %q: %w", path, err)
+		}
 	}
 
 	return nil
