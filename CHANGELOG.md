@@ -31,7 +31,7 @@ gpy v1.0.0 is the first stable release, featuring complete implementation of all
 #### Added
 
 ##### Core Features
-- **Multi-channel packaging** — Generate packages for npm, Homebrew, Chocolatey, and GitHub Actions
+- **Multi-channel packaging** — Generate packages for npm, Homebrew, Chocolatey, Docker, and GitHub Actions
 - **YAML configuration** — Single config file (`gpy.yaml`) drives all package generation
 - **Cross-platform support** — Build binaries for darwin (amd64/arm64), linux (amd64/arm64), and windows (amd64)
 - **Interactive wizard** — `gpy init` command guides users through configuration setup
@@ -67,6 +67,12 @@ gpy v1.0.0 is the first stable release, featuring complete implementation of all
   - GitHub Release uploads
   - Configurable tag patterns
   - 11 comprehensive tests
+
+- **Docker Generator**
+  - Multi-stage Dockerfile for minimal production images
+  - `.dockerignore` generated alongside Dockerfile
+  - Configurable image name, exposed port, ENV directives, CMD override
+  - Uses `{{name}}` placeholder in CMD template
 
 ##### Configuration System (WS1)
 - Config file auto-discovery (8 filename patterns)
@@ -170,7 +176,7 @@ gpy v1.0.0 is the first stable release, featuring complete implementation of all
 ## Roadmap for v1.x
 
 ### Potential Future Enhancements (Non-Breaking)
-- Additional package managers (Scoop, Linux distros, Docker)
+- Additional package managers (Scoop, Linux distros)
 - Binary signing support (gpg, codesign)
 - SLSA provenance generation
 - More template functions
