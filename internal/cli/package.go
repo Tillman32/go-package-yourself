@@ -26,6 +26,7 @@ func Package(opts *GlobalOpts, args []string) error {
 	fs := flag.NewFlagSet("package", flag.ContinueOnError)
 	onlyStr := fs.String("only", "", "comma-separated list of generators to run (npm,homebrew,chocolatey,docker)")
 	version := fs.String("version", "", "version to use in generated files (optional)")
+	sync := fs.Bool("sync", false, "regenerate and overwrite existing artifacts (for config updates)")
 	configPath := fs.String("config", "", "path to config file (overrides global --config)")
 	projectRoot := fs.String("project-root", "", "project root directory (overrides global --project-root)")
 
@@ -86,8 +87,8 @@ func Package(opts *GlobalOpts, args []string) error {
 		// If no generators are enabled in config, default to npm+homebrew+chocolatey
 		if countEnabled(enabled) == 0 {
 			enabled = map[string]bool{
-				"npm":      true,
-				"homebrew": true,
+				"npm":        true,
+				"homebrew":   true,
 				"chocolatey": true,
 			}
 		}
@@ -116,7 +117,7 @@ func Package(opts *GlobalOpts, args []string) error {
 		if err != nil {
 			return fmt.Errorf("npm generation failed: %w", err)
 		}
-		if err := writeOutputs(absProjectRoot, outputs); err != nil {
+		if err := writeOutputs(absProjectRoot, outputs, *sync); err != nil {
 			return fmt.Errorf("failed to write npm artifacts: %w", err)
 		}
 		fmt.Printf("✓ Generated packaging/npm/%s/\n", cfg.Packages.NPM.PackageName)
@@ -127,7 +128,7 @@ func Package(opts *GlobalOpts, args []string) error {
 		if err != nil {
 			return fmt.Errorf("homebrew generation failed: %w", err)
 		}
-		if err := writeOutputs(absProjectRoot, outputs); err != nil {
+		if err := writeOutputs(absProjectRoot, outputs, *sync); err != nil {
 			return fmt.Errorf("failed to write homebrew artifacts: %w", err)
 		}
 		formulaName := cfg.Packages.Homebrew.FormulaName
@@ -142,7 +143,7 @@ func Package(opts *GlobalOpts, args []string) error {
 		if err != nil {
 			return fmt.Errorf("chocolatey generation failed: %w", err)
 		}
-		if err := writeOutputs(absProjectRoot, outputs); err != nil {
+		if err := writeOutputs(absProjectRoot, outputs, *sync); err != nil {
 			return fmt.Errorf("failed to write chocolatey artifacts: %w", err)
 		}
 		pkgID := cfg.Packages.Chocolatey.PackageID
@@ -157,13 +158,17 @@ func Package(opts *GlobalOpts, args []string) error {
 		if err != nil {
 			return fmt.Errorf("docker generation failed: %w", err)
 		}
-		if err := writeOutputs(absProjectRoot, outputs); err != nil {
+		if err := writeOutputs(absProjectRoot, outputs, *sync); err != nil {
 			return fmt.Errorf("failed to write Docker artifacts: %w", err)
 		}
 		fmt.Printf("✓ Generated Dockerfile and .dockerignore\n")
 	}
 
-	fmt.Printf("\n✓ All artifacts generated successfully\n")
+	if *sync {
+		fmt.Printf("\n✓ All artifacts synchronized successfully\n")
+	} else {
+		fmt.Printf("\n✓ All artifacts generated successfully\n")
+	}
 	fmt.Printf("Review generated files in: %s/packaging/\n", absProjectRoot)
 
 	return nil
@@ -270,7 +275,9 @@ func generatorDocker(ctx generator.Context) ([]generator.FileOutput, error) {
 }
 
 // writeOutputs writes all generator outputs to disk.
-func writeOutputs(projectRoot string, outputs []generator.FileOutput) error {
+// If sync is true, it will silently overwrite (for config updates).
+// Otherwise, it will still overwrite but could warn the user.
+func writeOutputs(projectRoot string, outputs []generator.FileOutput, sync bool) error {
 	for _, output := range outputs {
 		path := filepath.Join(projectRoot, output.Path)
 
@@ -280,7 +287,7 @@ func writeOutputs(projectRoot string, outputs []generator.FileOutput) error {
 			return fmt.Errorf("failed to create directory %q: %w", dir, err)
 		}
 
-		// Write file
+		// Write file (always allow overwrites)
 		if err := os.WriteFile(path, output.Content, output.Mode); err != nil {
 			return fmt.Errorf("failed to write file %q: %w", path, err)
 		}
@@ -297,10 +304,12 @@ Usage:
 
 Flags:
   --only <generators>    Comma-separated list of generators to run
-                        Valid values: npm, homebrew, chocolatey, docker
-                        Example: --only npm,homebrew
+                         Valid values: npm, homebrew, chocolatey, docker
+                         Example: --only npm,homebrew
   --version <version>    Version to use in generated files
-                        Example: --version 1.2.3
+                         Example: --version 1.2.3
+  --sync                 Regenerate and overwrite existing artifacts
+                         Use this after updating gpy.yaml
   -h, --help             Show this help message
 
 Global flags:
@@ -311,6 +320,7 @@ Examples:
   gpy package
   gpy package --only npm,homebrew
   gpy package --version 1.2.3
+  gpy package --sync     # Regenerate after config changes
   gpy --project-root /path/to/project package
 
 Description:
@@ -320,6 +330,8 @@ Description:
   Enabled generators are determined by:
   1. The --only flag if specified
   2. The packages configuration in gpy.yaml
+
+  Use --sync to regenerate and overwrite existing artifacts after updating gpy.yaml.
 
   Exit codes:
     0  Success

@@ -18,6 +18,7 @@ func Workflow(opts *GlobalOpts, args []string) error {
 	// Parse command-specific flags
 	fs := flag.NewFlagSet("workflow", flag.ContinueOnError)
 	write := fs.Bool("write", false, "write workflow to the configured file path")
+	sync := fs.Bool("sync", false, "regenerate and overwrite existing workflow (for config updates)")
 
 	if err := fs.Parse(args); err != nil {
 		if err == flag.ErrHelp {
@@ -65,7 +66,7 @@ func Workflow(opts *GlobalOpts, args []string) error {
 	workflowOutput := outputs[0]
 	workflowYAML := string(workflowOutput.Content)
 
-	if *write {
+	if *write || *sync {
 		// Use configured workflow file path (should be set by ApplyDefaults)
 		workflowFilePath := cfg.GitHub.Workflows.WorkflowFile
 		if workflowFilePath == "" {
@@ -79,9 +80,11 @@ func Workflow(opts *GlobalOpts, args []string) error {
 			return fmt.Errorf("failed to create workflow directory %q: %w", dir, err)
 		}
 
-		// Check if workflow file already exists to prevent overwriting
-		if _, err := os.Stat(workflowPath); err == nil {
-			return fmt.Errorf("workflow file already exists at %q\n\nTo replace it, delete the existing file and run gpy workflow --write again", workflowFilePath)
+		// Check if workflow file already exists (only matters for --write, not --sync)
+		if *write && !*sync {
+			if _, err := os.Stat(workflowPath); err == nil {
+				return fmt.Errorf("workflow file already exists at %q\n\nTo replace it, use 'gpy workflow --sync' to regenerate, or delete the file and run 'gpy workflow --write' again", workflowFilePath)
+			}
 		}
 
 		// Write workflow file
@@ -89,9 +92,13 @@ func Workflow(opts *GlobalOpts, args []string) error {
 			return fmt.Errorf("failed to write workflow file %q: %w", workflowPath, err)
 		}
 
-		fmt.Printf("✓ Workflow written to: %s\n", workflowFilePath)
-		fmt.Printf("✓ Workflow file created successfully\n")
-		fmt.Printf("Next step: Push to GitHub to enable automated releases\n")
+		if *sync {
+			fmt.Printf("✓ Workflow updated: %s\n", workflowFilePath)
+		} else {
+			fmt.Printf("✓ Workflow written to: %s\n", workflowFilePath)
+			fmt.Printf("✓ Workflow file created successfully\n")
+			fmt.Printf("Next step: Push to GitHub to enable automated releases\n")
+		}
 	} else {
 		// Print to stdout
 		fmt.Println(workflowYAML)
@@ -117,7 +124,9 @@ Usage:
 
 Flags:
   --write                Write workflow to the configured file path
-                        Without this flag, prints YAML to stdout
+                         Without this flag, prints YAML to stdout
+  --sync                 Regenerate and overwrite existing workflow
+                         Use this after updating gpy.yaml
   -h, --help             Show this help message
 
 Global flags:
@@ -126,15 +135,17 @@ Global flags:
 
 Examples:
    gpy workflow          # Print workflow YAML to stdout
-   gpy workflow --write  # Write workflow to .github/workflows/gpy-release.yaml
-   gpy --project-root /path/to/project workflow --write
+   gpy workflow --write  # Write workflow to .github/workflows/release.yml
+   gpy workflow --sync   # Regenerate after config changes
+   gpy --project-root /path/to/project workflow --sync
 
 Description:
   Generates a GitHub Actions workflow file for automating releases.
   The workflow file path is configured in gpy.yaml.
 
-  Without --write, prints the generated YAML to stdout so you can review it.
+  Without --write or --sync, prints the generated YAML to stdout so you can review it.
   With --write, creates the workflow file in the configured location.
+  With --sync, regenerates and overwrites the existing workflow (for config updates).
 
   Exit codes:
     0  Success
