@@ -556,7 +556,7 @@ func archiveStepRunUnix() string {
 
 // archiveStepRunWindows generates the archive creation step script for Windows (PowerShell).
 func archiveStepRunWindows() string {
-	return `Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force`
+	return `Compress-Archive -Path "${{ matrix.bin-path }}" -DestinationPath "${{ matrix.archive }}" -Force`
 }
 
 // checksumStepRun generates the checksum generation step script.
