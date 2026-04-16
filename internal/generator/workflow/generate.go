@@ -537,8 +537,8 @@ func buildStepRun(projectName string, goConfig model.Go) string {
 // archiveStepRun generates the archive creation step script.
 func archiveStepRun() string {
 	return `if [ "${{ matrix.ext }}" = ".zip" ]; then
-  # Use zip for .zip files (available on most systems)
-  zip -j "${{ matrix.archive }}" "${{ matrix.bin-path }}"
+  # Use PowerShell Compress-Archive for .zip files (cross-platform with pwsh)
+  pwsh -Command "Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force"
 else
   # Use tar for .tar.gz files
   tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
