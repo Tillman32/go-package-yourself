@@ -59,21 +59,16 @@ jobs:
                 GOOS: ${{ matrix.os }}
               run: go build -o go-package-yourself -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
             - name: Create archive
-              env:
-                ARCHIVE: ${{ matrix.archive }}
-                BIN_PATH: ${{ matrix.bin-path }}
-                EXT: ${{ matrix.ext }}
               run: |-
                 if [ "${{ runner.os }}" = "Windows" ]; then
-                  cd "${{ env.BIN_PATH_DIR }}" 2>/dev/null || true
-                  powershell -Command "Compress-Archive -Path ${{ env.BIN_PATH }} -DestinationPath ${{ env.ARCHIVE }} -Force"
+                  powershell -Command "Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force"
                 else
-                  tar czf "${{ env.ARCHIVE }}" "${{ env.BIN_PATH }}"
+                  tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
                 fi
             - name: Generate checksums
               run: |-
-                sha256sum "${{ env.ARCHIVE }}" | sed 's/  .*\//  /' >> checksums.txt
-                echo "${{ env.ARCHIVE }}" >> release-files.txt
+                sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> checksums.txt
+                echo "${{ matrix.archive }}" >> release-files.txt
                 echo checksums.txt >> release-files.txt
             - name: Upload to GitHub Release
               uses: softprops/action-gh-release@v1

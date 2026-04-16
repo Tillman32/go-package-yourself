@@ -211,11 +211,6 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		{
 			Name: "Create archive",
 			Run:  archiveStepRun(),
-			Env: map[string]string{
-				"ARCHIVE":  "${{ matrix.archive }}",
-				"BIN_PATH": "${{ matrix.bin-path }}",
-				"EXT":      "${{ matrix.ext }}",
-			},
 		},
 		{
 			Name: "Generate checksums",
@@ -540,10 +535,9 @@ func buildStepRun(projectName string, goConfig model.Go) string {
 // archiveStepRun generates the archive creation step script.
 func archiveStepRun() string {
 	return `if [ "${{ runner.os }}" = "Windows" ]; then
-  cd "${{ env.BIN_PATH_DIR }}" 2>/dev/null || true
-  powershell -Command "Compress-Archive -Path ${{ env.BIN_PATH }} -DestinationPath ${{ env.ARCHIVE }} -Force"
+  powershell -Command "Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force"
 else
-  tar czf "${{ env.ARCHIVE }}" "${{ env.BIN_PATH }}"
+  tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
 fi`
 }
 
@@ -553,8 +547,8 @@ func checksumStepRun(checksumFile string) string {
 		checksumFile = "checksums.txt"
 	}
 
-	return fmt.Sprintf(`sha256sum "${{ env.ARCHIVE }}" | sed 's/  .*\//  /' >> %s
-echo "${{ env.ARCHIVE }}" >> release-files.txt
+	return fmt.Sprintf(`sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> %s
+echo "${{ matrix.archive }}" >> release-files.txt
 echo %s >> release-files.txt`, checksumFile, checksumFile)
 }
 
