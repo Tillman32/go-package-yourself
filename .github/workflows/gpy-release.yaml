@@ -48,7 +48,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                sparse-checkout-cone-mode: false
+                sparse-checkout: "false"
             - name: Setup Go
               uses: actions/setup-go@v4
               with:
