@@ -9,8 +9,13 @@
 ### Build
 
 ```bash
-go build -o gpy ./cmd/gpy
+go build -o gpy ./cmd/gpy                                          # dev build (version = "dev")
+go build -ldflags "-X main.Version=$(cat VERSION)" -o gpy ./cmd/gpy  # versioned build
 ```
+
+The `VERSION` file at repo root is the single source of truth for the release version.
+`/ship` reads and bumps it. CI passes it to the binary via `-X main.Version`.
+Run `gpy version` (or `gpy --version`) to print the baked-in version.
 
 ### Test
 
