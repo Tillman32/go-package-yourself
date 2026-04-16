@@ -218,7 +218,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		{
 			Name:  "Create archive (Windows)",
 			Run:   archiveStepRunWindows(),
-			Shell: "powershell",
+			Shell: "pwsh",
 			If:    "${{ matrix.os == 'windows' }}",
 		},
 		{
@@ -230,7 +230,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		{
 			Name:  "Generate checksums (Windows)",
 			Run:   checksumStepRunWindows(release.Checksums.File),
-			Shell: "powershell",
+			Shell: "pwsh",
 			If:    "${{ matrix.os == 'windows' }}",
 		},
 		{
@@ -511,13 +511,15 @@ func publishChocolateyJob(projectRepo string, chocolateyCfg model.Chocolatey) Wo
 go run ./cmd/gpy --config gpy.yaml package --only chocolatey --output "pkg"`,
 			},
 			{
-				Name: "Pack Chocolatey package",
+				Name:  "Pack Chocolatey package",
+				Shell: "pwsh",
 				Run: `# Navigate to generated package and pack it
 cd "pkg\chocolatey\*"
 choco pack`,
 			},
 			{
-				Name: "Push to Chocolatey",
+				Name:  "Push to Chocolatey",
+				Shell: "pwsh",
 				Env: map[string]string{
 					"ChocolateyApiKey": "${{ secrets.CHOCOLATEY_API_KEY }}",
 				},
@@ -597,7 +599,7 @@ func releaseJob() WorkflowJob {
 				With: map[string]interface{}{
 					"path":           "release-artifacts",
 					"pattern":        "release-*",
-					"merge-multiple": true,
+					"merge-multiple": false,
 				},
 			},
 			{
