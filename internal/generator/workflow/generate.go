@@ -597,7 +597,7 @@ func releaseJob() WorkflowJob {
 				With: map[string]interface{}{
 					"path":           "release-artifacts",
 					"pattern":        "release-*",
-					"merge-multiple": true,
+					"merge-multiple": false,
 				},
 			},
 			{
