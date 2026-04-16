@@ -203,7 +203,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		},
 		{
 			Name: "Build binary",
-			Run:  buildStepRun(projectName, goConfig),
+			Run:  buildStepRunWithMatrix(projectName, goConfig),
 			Env: map[string]string{
 				"GOOS":   "${{ matrix.os }}",
 				"GOARCH": "${{ matrix.arch }}",
@@ -531,8 +531,8 @@ choco push "$($nupkg.FullName)" --source=https://push.chocolatey.org/`,
 	}
 }
 
-// buildStepRun generates the build step shell script.
-func buildStepRun(projectName string, goConfig model.Go) string {
+// buildStepRunWithMatrix generates the build step shell script, using matrix.bin-path for OS-aware binary naming.
+func buildStepRunWithMatrix(projectName string, goConfig model.Go) string {
 	ldflags := ""
 	if goConfig.LDFlags != "" {
 		ldflags = fmt.Sprintf(" -ldflags \"%s -X main.Version=${{ github.ref_name }}\"", goConfig.LDFlags)
@@ -541,8 +541,7 @@ func buildStepRun(projectName string, goConfig model.Go) string {
 	}
 
 	return fmt.Sprintf(
-		"go build -o %s%s %s",
-		projectName,
+		"go build -o ${{ matrix.bin-path }}%s %s",
 		ldflags,
 		goConfig.Main,
 	)
