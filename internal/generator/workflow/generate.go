@@ -189,10 +189,6 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		{
 			Name: "Checkout code",
 			Uses: "actions/checkout@v4",
-			With: map[string]interface{}{
-				"fetch-depth":     0,
-				"sparse-checkout": ".",
-			},
 		},
 		{
 			Name: "Setup Go",
