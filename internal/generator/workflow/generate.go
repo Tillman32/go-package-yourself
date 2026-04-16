@@ -217,13 +217,11 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 			Run:  checksumStepRun(release.Checksums.File),
 		},
 		{
-			Name: "Upload to GitHub Release",
-			Uses: "softprops/action-gh-release@v1",
+			Name: "Upload artifacts",
+			Uses: "actions/upload-artifact@v4",
 			With: map[string]interface{}{
-				"files": "release-files.txt",
-			},
-			Env: map[string]string{
-				"GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+				"name": "release-${{ matrix.os }}-${{ matrix.arch }}",
+				"path": "release-files.txt\n${{ matrix.archive }}\nchecksums.txt",
 			},
 		},
 	}
@@ -238,6 +236,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 			},
 			Steps: steps,
 		},
+		"release": releaseJob(),
 	}
 
 	if dockerCfg.Enabled {
@@ -550,6 +549,42 @@ func checksumStepRun(checksumFile string) string {
 	return fmt.Sprintf(`sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> %s
 echo "${{ matrix.archive }}" >> release-files.txt
 echo %s >> release-files.txt`, checksumFile, checksumFile)
+}
+
+// releaseJob creates the release job that depends on build and uploads all artifacts.
+func releaseJob() WorkflowJob {
+	return WorkflowJob{
+		Needs:  []string{"build"},
+		RunsOn: "ubuntu-latest",
+		Permissions: map[string]string{
+			"contents": "write",
+		},
+		Steps: []WorkflowStep{
+			{
+				Name: "Download artifacts",
+				Uses: "actions/download-artifact@v4",
+				With: map[string]interface{}{
+					"path":           "release-artifacts",
+					"pattern":        "release-*",
+					"merge-multiple": true,
+				},
+			},
+			{
+				Name: "List artifacts",
+				Run:  "find release-artifacts -type f -exec ls -lh {} \\;",
+			},
+			{
+				Name: "Upload to GitHub Release",
+				Uses: "softprops/action-gh-release@v1",
+				With: map[string]interface{}{
+					"files": "release-artifacts/**/*",
+				},
+				Env: map[string]string{
+					"GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+				},
+			},
+		},
+	}
 }
 
 // marshalWorkflow converts the workflow document to YAML bytes.

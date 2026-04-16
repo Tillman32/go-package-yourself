@@ -70,12 +70,14 @@ jobs:
                 sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> checksums.txt
                 echo "${{ matrix.archive }}" >> release-files.txt
                 echo checksums.txt >> release-files.txt
-            - name: Upload to GitHub Release
-              uses: softprops/action-gh-release@v1
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
               with:
-                files: release-files.txt
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                name: release-${{ matrix.os }}-${{ matrix.arch }}
+                path: |-
+                    release-files.txt
+                    ${{ matrix.archive }}
+                    checksums.txt
     publish-chocolatey:
         needs:
             - build
@@ -190,3 +192,24 @@ jobs:
                 # Navigate to generated package and publish
                 cd "$TEMP_DIR/npm/go-package-yourself"
                 npm publish
+    release:
+        needs:
+            - build
+        permissions:
+            contents: write
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download artifacts
+              uses: actions/download-artifact@v4
+              with:
+                merge-multiple: true
+                path: release-artifacts
+                pattern: release-*
+            - name: List artifacts
+              run: find release-artifacts -type f -exec ls -lh {} \;
+            - name: Upload to GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                files: release-artifacts/**/*
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
