@@ -171,13 +171,14 @@ type JobMatrix struct {
 
 // WorkflowStep represents a single step in a job.
 type WorkflowStep struct {
-	ID   string                 `yaml:"id,omitempty"`
-	Name string                 `yaml:"name,omitempty"`
-	Uses string                 `yaml:"uses,omitempty"`
-	With map[string]interface{} `yaml:"with,omitempty"`
-	Env  map[string]string      `yaml:"env,omitempty"`
-	If   string                 `yaml:"if,omitempty"`
-	Run  string                 `yaml:"run,omitempty"`
+	ID    string                 `yaml:"id,omitempty"`
+	Name  string                 `yaml:"name,omitempty"`
+	Uses  string                 `yaml:"uses,omitempty"`
+	With  map[string]interface{} `yaml:"with,omitempty"`
+	Env   map[string]string      `yaml:"env,omitempty"`
+	If    string                 `yaml:"if,omitempty"`
+	Run   string                 `yaml:"run,omitempty"`
+	Shell string                 `yaml:"shell,omitempty"`
 }
 
 // newWorkflow constructs the complete workflow document.
@@ -209,12 +210,14 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 			},
 		},
 		{
-			Name: "Create archive",
-			Run:  archiveStepRun(),
+			Name:  "Create archive",
+			Run:   archiveStepRun(),
+			Shell: "bash",
 		},
 		{
-			Name: "Generate checksums",
-			Run:  checksumStepRun(release.Checksums.File),
+			Name:  "Generate checksums",
+			Run:   checksumStepRun(release.Checksums.File),
+			Shell: "bash",
 		},
 		{
 			Name: "Upload artifacts",
@@ -533,9 +536,11 @@ func buildStepRun(projectName string, goConfig model.Go) string {
 
 // archiveStepRun generates the archive creation step script.
 func archiveStepRun() string {
-	return `if [ "${{ runner.os }}" = "Windows" ]; then
-  powershell -Command "Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force"
+	return `if [ "${{ matrix.ext }}" = ".zip" ]; then
+  # Use zip for .zip files (available on most systems)
+  zip -j "${{ matrix.archive }}" "${{ matrix.bin-path }}"
 else
+  # Use tar for .tar.gz files
   tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
 fi`
 }

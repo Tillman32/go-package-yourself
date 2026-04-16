@@ -60,16 +60,20 @@ jobs:
               run: go build -o go-package-yourself -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
             - name: Create archive
               run: |-
-                if [ "${{ runner.os }}" = "Windows" ]; then
-                  powershell -Command "Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force"
+                if [ "${{ matrix.ext }}" = ".zip" ]; then
+                  # Use zip for .zip files (available on most systems)
+                  zip -j "${{ matrix.archive }}" "${{ matrix.bin-path }}"
                 else
+                  # Use tar for .tar.gz files
                   tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
                 fi
+              shell: bash
             - name: Generate checksums
               run: |-
                 sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> checksums.txt
                 echo "${{ matrix.archive }}" >> release-files.txt
                 echo checksums.txt >> release-files.txt
+              shell: bash
             - name: Upload artifacts
               uses: actions/upload-artifact@v4
               with:
