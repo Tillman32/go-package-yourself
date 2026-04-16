@@ -64,7 +64,7 @@ jobs:
               shell: bash
             - name: Create archive (Windows)
               if: ${{ matrix.os == 'windows' }}
-              run: Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force
+              run: Compress-Archive -Path "${{ matrix.bin-path }}" -DestinationPath "${{ matrix.archive }}" -Force
               shell: powershell
             - name: Generate checksums (Unix)
               if: ${{ matrix.os != 'windows' }}
