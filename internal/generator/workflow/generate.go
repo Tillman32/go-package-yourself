@@ -189,6 +189,9 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		{
 			Name: "Checkout code",
 			Uses: "actions/checkout@v4",
+			With: map[string]interface{}{
+				"sparse-checkout-cone-mode": false,
+			},
 		},
 		{
 			Name: "Setup Go",
