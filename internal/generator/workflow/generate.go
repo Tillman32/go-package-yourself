@@ -210,14 +210,28 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 			},
 		},
 		{
-			Name:  "Create archive",
-			Run:   archiveStepRun(),
+			Name:  "Create archive (Unix)",
+			Run:   archiveStepRunUnix(),
 			Shell: "bash",
+			If:    "${{ matrix.os != 'windows' }}",
 		},
 		{
-			Name:  "Generate checksums",
-			Run:   checksumStepRun(release.Checksums.File),
+			Name:  "Create archive (Windows)",
+			Run:   archiveStepRunWindows(),
+			Shell: "powershell",
+			If:    "${{ matrix.os == 'windows' }}",
+		},
+		{
+			Name:  "Generate checksums (Unix)",
+			Run:   checksumStepRunUnix(release.Checksums.File),
 			Shell: "bash",
+			If:    "${{ matrix.os != 'windows' }}",
+		},
+		{
+			Name:  "Generate checksums (Windows)",
+			Run:   checksumStepRunWindows(release.Checksums.File),
+			Shell: "powershell",
+			If:    "${{ matrix.os == 'windows' }}",
 		},
 		{
 			Name: "Upload artifacts",
@@ -535,18 +549,19 @@ func buildStepRun(projectName string, goConfig model.Go) string {
 }
 
 // archiveStepRun generates the archive creation step script.
-func archiveStepRun() string {
-	return `if [ "${{ matrix.ext }}" = ".zip" ]; then
-  # Use PowerShell Compress-Archive for .zip files (cross-platform with pwsh)
-  pwsh -Command "Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force"
-else
-  # Use tar for .tar.gz files
-  tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
-fi`
+// archiveStepRunUnix generates the archive creation step script for Unix platforms.
+func archiveStepRunUnix() string {
+	return `tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"`
+}
+
+// archiveStepRunWindows generates the archive creation step script for Windows (PowerShell).
+func archiveStepRunWindows() string {
+	return `Compress-Archive -Path '${{ matrix.bin-path }}' -DestinationPath '${{ matrix.archive }}' -Force`
 }
 
 // checksumStepRun generates the checksum generation step script.
-func checksumStepRun(checksumFile string) string {
+// checksumStepRunUnix generates the checksum generation step script for Unix platforms.
+func checksumStepRunUnix(checksumFile string) string {
 	if checksumFile == "" {
 		checksumFile = "checksums.txt"
 	}
@@ -554,6 +569,18 @@ func checksumStepRun(checksumFile string) string {
 	return fmt.Sprintf(`sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> %s
 echo "${{ matrix.archive }}" >> release-files.txt
 echo %s >> release-files.txt`, checksumFile, checksumFile)
+}
+
+// checksumStepRunWindows generates the checksum generation step script for Windows (PowerShell).
+func checksumStepRunWindows(checksumFile string) string {
+	if checksumFile == "" {
+		checksumFile = "checksums.txt"
+	}
+
+	return fmt.Sprintf(`$hash = (Get-FileHash -Path '${{ matrix.archive }}' -Algorithm SHA256).Hash
+Add-Content -Path %s -Value "$hash  ${{ matrix.archive }}"
+Add-Content -Path release-files.txt -Value '${{ matrix.archive }}'
+Add-Content -Path release-files.txt -Value '%s'`, checksumFile, checksumFile)
 }
 
 // releaseJob creates the release job that depends on build and uploads all artifacts.
