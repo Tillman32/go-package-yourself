@@ -53,14 +53,14 @@ jobs:
         run: ./gpy version
 
       - name: gpy package (dry-run — generate artifacts only)
-        run: ./gpy package --config gpy.yaml --version 0.0.0-pr
+        run: ./gpy --config gpy.yaml package --version 0.0.0-pr
 
       - name: gpy workflow --write (regenerate and diff)
         run: |
           cp .github/workflows/gpy-release.yaml gpy-release.yaml.bak
-          ./gpy workflow --sync --config gpy.yaml
+          ./gpy --config gpy.yaml workflow --sync
           if ! diff -u gpy-release.yaml.bak .github/workflows/gpy-release.yaml; then
-            echo "::error::gpy-release.yaml is out of sync with gpy.yaml. Run 'gpy workflow --sync' and commit the result."
+            echo "::error::gpy-release.yaml is out of sync with gpy.yaml. Run 'gpy --config gpy.yaml workflow --sync' and commit the result."
             exit 1
           fi
 
