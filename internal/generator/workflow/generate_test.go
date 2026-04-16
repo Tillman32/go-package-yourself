@@ -205,7 +205,7 @@ func TestYAMLSyntaxValid(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				Enabled: true,
+				Enabled:      true,
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -295,7 +295,7 @@ func TestWorkflowHasAllPlatforms(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				Enabled: true,
+				Enabled:      true,
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -404,7 +404,7 @@ func TestDeterministicOutput(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				Enabled: true,
+				Enabled:      true,
 				TagPatterns:  []string{"v*"},
 			},
 		},
@@ -508,7 +508,7 @@ func TestTagPatterns(t *testing.T) {
 			GitHub: model.GitHub{
 				Workflows: model.GitHubWorkflows{
 					WorkflowFile: ".github/workflows/gpy-release.yaml",
-					TagPatterns: test.patterns,
+					TagPatterns:  test.patterns,
 				},
 			},
 		}
@@ -582,7 +582,7 @@ func TestLDFlagsHandling(t *testing.T) {
 			GitHub: model.GitHub{
 				Workflows: model.GitHubWorkflows{
 					WorkflowFile: ".github/workflows/gpy-release.yaml",
-					TagPatterns: []string{"v*"},
+					TagPatterns:  []string{"v*"},
 				},
 			},
 		}
@@ -731,7 +731,7 @@ func TestWorkflow_DockerJobPresent(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				TagPatterns: []string{"v*"},
+				TagPatterns:  []string{"v*"},
 			},
 		},
 	}
@@ -816,7 +816,7 @@ func TestWorkflow_DockerJobAbsent(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				TagPatterns: []string{"v*"},
+				TagPatterns:  []string{"v*"},
 			},
 		},
 	}
@@ -858,13 +858,17 @@ func TestWorkflow_DockerJobAbsent(t *testing.T) {
 		t.Errorf("workflow.Jobs should not contain %q key when docker is disabled", "publish-docker")
 	}
 
-	// Check that only build job exists
-	if len(workflow.Jobs) != 1 {
-		t.Errorf("expected 1 job in workflow, got %d", len(workflow.Jobs))
+	// Check that build and release jobs exist (2 jobs when no packaging is enabled)
+	if len(workflow.Jobs) != 2 {
+		t.Errorf("expected 2 jobs in workflow (build + release), got %d", len(workflow.Jobs))
 	}
 
 	if _, hasBuild := workflow.Jobs["build"]; !hasBuild {
 		t.Errorf("Jobs map is missing %q key", "build")
+	}
+
+	if _, hasRelease := workflow.Jobs["release"]; !hasRelease {
+		t.Errorf("Jobs map is missing %q key", "release")
 	}
 }
 
@@ -900,7 +904,7 @@ func TestWorkflow_NpmJobPresent(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				TagPatterns: []string{"v*"},
+				TagPatterns:  []string{"v*"},
 			},
 		},
 	}
@@ -980,7 +984,7 @@ func TestWorkflow_HomebrewJobPresent(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				TagPatterns: []string{"v*"},
+				TagPatterns:  []string{"v*"},
 			},
 		},
 	}
@@ -1059,7 +1063,7 @@ func TestWorkflow_ChocolateyJobPresent(t *testing.T) {
 		GitHub: model.GitHub{
 			Workflows: model.GitHubWorkflows{
 				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				TagPatterns: []string{"v*"},
+				TagPatterns:  []string{"v*"},
 			},
 		},
 	}
