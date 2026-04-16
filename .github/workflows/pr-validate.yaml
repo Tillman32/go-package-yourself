@@ -1,0 +1,74 @@
+# CI workflow for pull request validation
+# Validates that changes to gpy do not break the generated release workflow.
+# Publishing steps are intentionally skipped — no secrets are passed, so the
+# `if: env.SECRET != ''` guards in gpy-release.yaml short-circuit all pushes.
+
+name: PR Validate
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Run tests (with race detection)
+        run: go test -race ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: go vet
+        run: go vet ./...
+
+  smoke-gpy:
+    name: Smoke-test gpy commands
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Build gpy
+        run: go build -o gpy -ldflags "-X main.Version=$(cat VERSION)" ./cmd/gpy
+
+      - name: gpy version
+        run: ./gpy version
+
+      - name: gpy package (dry-run — generate artifacts only)
+        run: ./gpy --config gpy.yaml package --version 0.0.0-pr
+
+      - name: gpy workflow --write (regenerate and diff)
+        run: |
+          cp .github/workflows/gpy-release.yaml gpy-release.yaml.bak
+          ./gpy --config gpy.yaml workflow --sync
+          if ! diff -u gpy-release.yaml.bak .github/workflows/gpy-release.yaml; then
+            echo "::error::gpy-release.yaml is out of sync with gpy.yaml. Run 'gpy --config gpy.yaml workflow --sync' and commit the result."
+            exit 1
+          fi
+
+  # Run the real release workflow via workflow_call — but pass NO secrets,
+  # so every publish step is skipped by its own `if: env.SECRET != ''` guard.
+  # This validates the build matrix (compile + archive + checksum) end-to-end.
+  release-dry-run:
+    name: Release dry-run (no publish)
+    uses: ./.github/workflows/gpy-release.yaml
+    # secrets: intentionally omitted — withholds NPM_TOKEN, CHOCOLATEY_API_KEY,
+    # HOMEBREW_CORE_PAT so all publish jobs no-op via their existing guards.
