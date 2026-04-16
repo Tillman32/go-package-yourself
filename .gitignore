@@ -37,3 +37,6 @@ tmp/
 temp/
 .tmp/
 *.log
+
+# Compiled binaries from go build
+go-package-yourself
