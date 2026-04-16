@@ -101,8 +101,11 @@ jobs:
               with:
                 go-version: "1.22"
             - name: Generate Chocolatey package
+              shell: powershell
               run: |
-                go run ./cmd/gpy --config gpy.yaml package --only chocolatey --version "${{ github.ref_name }}"
+                $version = "${{ github.ref_name }}"
+                $version = $version -replace '^v', ''
+                go run ./cmd/gpy --config gpy.yaml package --only chocolatey --version $version
             - name: Pack Chocolatey package
               run: |
                 cd "packaging\chocolatey\*"
@@ -134,12 +137,11 @@ jobs:
                 #!/bin/bash
                 set -e
 
-                # Create temporary directory for formula generation
-                TEMP_DIR=$(mktemp -d)
-                trap "rm -rf $TEMP_DIR" EXIT
+                VERSION="${{ github.ref_name }}"
+                VERSION="${VERSION#v}"
 
-                # Generate homebrew formula with version from tag
-                go run ./cmd/gpy --config gpy.yaml package --only homebrew --version "${{ github.ref_name }}"
+                # Generate homebrew formula with version from tag (without v prefix)
+                go run ./cmd/gpy --config gpy.yaml package --only homebrew --version "$VERSION"
 
                 # Configure git
                 git config --global user.name "gpy-bot"
@@ -190,8 +192,11 @@ jobs:
                 #!/bin/bash
                 set -e
 
-                # Generate npm package with version from tag
-                go run ./cmd/gpy package --only npm --version "${{ github.ref_name }}"
+                VERSION="${{ github.ref_name }}"
+                VERSION="${VERSION#v}"
+
+                # Generate npm package with version from tag (without v prefix)
+                go run ./cmd/gpy package --only npm --version "$VERSION"
 
                 # Navigate to generated package and publish
                 cd "packaging/npm/go-package-yourself"
