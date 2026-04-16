@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`gpy version` subcommand** — Print the baked-in version string (`gpy version`, `gpy --version`, `gpy -v`)
+- **`VERSION` file** — Single source of truth for the release version; read by `/ship` to auto-bump on each release
 - **`--sync` flag** — Automatically sync generated artifacts to `gpy.yaml` (available on `package` and `workflow` commands)
 - **Auto-generated workflows in init** — `gpy init` now generates a GitHub Actions workflow file automatically during setup
 - **Reusable workflow support** — GitHub Actions workflows use `workflow_call` trigger for better integration with CI/CD pipelines
@@ -20,13 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Workflow command improvements** — Better defaults and clearer output when generating workflows
 
+### Fixed
+
+- **GitHub Actions workflow generation** — Resolved cross-platform build issues: matrix.bin-path for Windows .exe naming, platform-specific archive steps (tar.gz / zip), PowerShell Compress-Archive quoting, and separate release job with proper permissions
+- **`fetch-depth` and sparse-checkout** — Full repository checkout for tag-based builds
+- **Version prefix stripping** — Chocolatey, Homebrew, and npm packaging jobs now strip the `v` prefix from git tags
+- **Workflow conditions** — `env:` block now appears before `if:` in steps that gate on secrets
+
 ---
 
-## [1.0.0] - 2026-04-13
+## [0.1.0] - 2026-04-13
 
 ### Initial Release ✨
 
-gpy v1.0.0 is the first stable release, featuring complete implementation of all package managers and GitHub Actions workflow generation.
+gpy v0.1.0 is the first release, featuring complete implementation of all package managers and GitHub Actions workflow generation.
 
 #### Added
 
