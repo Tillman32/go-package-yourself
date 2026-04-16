@@ -47,6 +47,8 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
             - name: Setup Go
               uses: actions/setup-go@v4
               with:
@@ -55,30 +57,38 @@ jobs:
               env:
                 GOARCH: ${{ matrix.arch }}
                 GOOS: ${{ matrix.os }}
-              run: go build -o go-package-yourself -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
-            - name: Create archive
-              env:
-                ARCHIVE: ${{ matrix.archive }}
-                BIN_PATH: ${{ matrix.bin-path }}
-                EXT: ${{ matrix.ext }}
+              run: go build -o ${{ matrix.bin-path }} -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
+            - name: Create archive (Unix)
+              if: ${{ matrix.os != 'windows' }}
+              run: tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
+              shell: bash
+            - name: Create archive (Windows)
+              if: ${{ matrix.os == 'windows' }}
+              run: Compress-Archive -Path "${{ matrix.bin-path }}" -DestinationPath "${{ matrix.archive }}" -Force
+              shell: pwsh
+            - name: Generate checksums (Unix)
+              if: ${{ matrix.os != 'windows' }}
               run: |-
-                if [ "${{ runner.os }}" = "Windows" ]; then
-                  cd "${{ env.BIN_PATH_DIR }}" 2>/dev/null || true
-                  powershell -Command "Compress-Archive -Path ${{ env.BIN_PATH }} -DestinationPath ${{ env.ARCHIVE }} -Force"
-                else
-                  tar czf "${{ env.ARCHIVE }}" "${{ env.BIN_PATH }}"
-                fi
-            - name: Generate checksums
-              run: |-
-                sha256sum "${{ env.ARCHIVE }}" | sed 's/  .*\//  /' >> checksums.txt
-                echo "${{ env.ARCHIVE }}" >> release-files.txt
+                sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> checksums.txt
+                echo "${{ matrix.archive }}" >> release-files.txt
                 echo checksums.txt >> release-files.txt
-            - name: Upload to GitHub Release
-              uses: softprops/action-gh-release@v1
+              shell: bash
+            - name: Generate checksums (Windows)
+              if: ${{ matrix.os == 'windows' }}
+              run: |-
+                $hash = (Get-FileHash -Path '${{ matrix.archive }}' -Algorithm SHA256).Hash
+                Add-Content -Path checksums.txt -Value "$hash  ${{ matrix.archive }}"
+                Add-Content -Path release-files.txt -Value '${{ matrix.archive }}'
+                Add-Content -Path release-files.txt -Value 'checksums.txt'
+              shell: pwsh
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
               with:
-                files: release-files.txt
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                name: release-${{ matrix.os }}-${{ matrix.arch }}
+                path: |-
+                    release-files.txt
+                    ${{ matrix.archive }}
+                    checksums.txt
     publish-chocolatey:
         needs:
             - build
@@ -99,6 +109,7 @@ jobs:
                 # Navigate to generated package and pack it
                 cd "pkg\chocolatey\*"
                 choco pack
+              shell: pwsh
             - name: Push to Chocolatey
               env:
                 ChocolateyApiKey: ${{ secrets.CHOCOLATEY_API_KEY }}
@@ -108,6 +119,7 @@ jobs:
                 cd "pkg\chocolatey\*"
                 $nupkg = Get-ChildItem -Filter "*.nupkg" | Select-Object -First 1
                 choco push "$($nupkg.FullName)" --source=https://push.chocolatey.org/
+              shell: pwsh
     publish-homebrew:
         needs:
             - build
@@ -193,3 +205,24 @@ jobs:
                 # Navigate to generated package and publish
                 cd "$TEMP_DIR/npm/go-package-yourself"
                 npm publish
+    release:
+        needs:
+            - build
+        permissions:
+            contents: write
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download artifacts
+              uses: actions/download-artifact@v4
+              with:
+                merge-multiple: false
+                path: release-artifacts
+                pattern: release-*
+            - name: List artifacts
+              run: find release-artifacts -type f -exec ls -lh {} \;
+            - name: Upload to GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                files: release-artifacts/**/*
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

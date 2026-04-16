@@ -17,10 +17,17 @@ type GlobalOpts struct {
 }
 
 // Execute parses command-line arguments and routes to the appropriate subcommand.
-func Execute(args []string) error {
+// version is the build-time version string injected via ldflags (or "dev" for local builds).
+func Execute(args []string, version string) error {
 	if len(args) == 0 {
 		printUsage()
 		os.Exit(1)
+	}
+
+	// Handle --version global flag before parsing subcommand
+	if len(args) == 1 && (args[0] == "--version" || args[0] == "-v") {
+		fmt.Println(version)
+		return nil
 	}
 
 	// Parse global flags that come before the command
@@ -46,6 +53,10 @@ func Execute(args []string) error {
 	switch command {
 	case "help", "-h", "--help":
 		printUsage()
+		return nil
+
+	case "version":
+		fmt.Println(version)
 		return nil
 
 	case "init":
@@ -129,13 +140,13 @@ func parseGlobalFlags(args []string) (*GlobalOpts, []string, error) {
 
 // suggestCommand suggests possible commands based on a misspelled input.
 func suggestCommand(input string) string {
-	commands := []string{"init", "package", "workflow"}
+	commands := []string{"init", "package", "workflow", "version"}
 	for _, cmd := range commands {
 		if levenshteinDistance(input, cmd) <= 1 {
 			return fmt.Sprintf("Did you mean: gpy %s?", cmd)
 		}
 	}
-	return "Available commands: init, package, workflow"
+	return "Available commands: init, package, workflow, version"
 }
 
 // levenshteinDistance computes edit distance between two strings.
@@ -191,12 +202,14 @@ Global flags:
   --project-root <path>  Project root directory (default: current working directory)
   --no-tui               Disable interactive prompts; fail if required fields are missing
   --yes                  Accept all defaults; implies --no-tui
-  -h, --help            Show this help message
+  --version, -v          Print version and exit
+  -h, --help             Show this help message
 
 Commands:
   init                   Create a new go-package-yourself.yaml config
   package                Generate packaging artifacts (npm, homebrew, chocolatey)
   workflow               Generate GitHub Actions workflow file
+  version                Print version and exit
 
 Examples:
   gpy init
@@ -204,6 +217,7 @@ Examples:
   gpy package
   gpy package --only npm,homebrew
   gpy workflow --write
+  gpy version
 
 For more information on a command:
   gpy <command> -h

@@ -171,13 +171,14 @@ type JobMatrix struct {
 
 // WorkflowStep represents a single step in a job.
 type WorkflowStep struct {
-	ID   string                 `yaml:"id,omitempty"`
-	Name string                 `yaml:"name,omitempty"`
-	Uses string                 `yaml:"uses,omitempty"`
-	With map[string]interface{} `yaml:"with,omitempty"`
-	Env  map[string]string      `yaml:"env,omitempty"`
-	If   string                 `yaml:"if,omitempty"`
-	Run  string                 `yaml:"run,omitempty"`
+	ID    string                 `yaml:"id,omitempty"`
+	Name  string                 `yaml:"name,omitempty"`
+	Uses  string                 `yaml:"uses,omitempty"`
+	With  map[string]interface{} `yaml:"with,omitempty"`
+	Env   map[string]string      `yaml:"env,omitempty"`
+	If    string                 `yaml:"if,omitempty"`
+	Run   string                 `yaml:"run,omitempty"`
+	Shell string                 `yaml:"shell,omitempty"`
 }
 
 // newWorkflow constructs the complete workflow document.
@@ -189,6 +190,9 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		{
 			Name: "Checkout code",
 			Uses: "actions/checkout@v4",
+			With: map[string]interface{}{
+				"fetch-depth": 0,
+			},
 		},
 		{
 			Name: "Setup Go",
@@ -199,33 +203,42 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		},
 		{
 			Name: "Build binary",
-			Run:  buildStepRun(projectName, goConfig),
+			Run:  buildStepRunWithMatrix(projectName, goConfig),
 			Env: map[string]string{
 				"GOOS":   "${{ matrix.os }}",
 				"GOARCH": "${{ matrix.arch }}",
 			},
 		},
 		{
-			Name: "Create archive",
-			Run:  archiveStepRun(),
-			Env: map[string]string{
-				"ARCHIVE":  "${{ matrix.archive }}",
-				"BIN_PATH": "${{ matrix.bin-path }}",
-				"EXT":      "${{ matrix.ext }}",
-			},
+			Name:  "Create archive (Unix)",
+			Run:   archiveStepRunUnix(),
+			Shell: "bash",
+			If:    "${{ matrix.os != 'windows' }}",
 		},
 		{
-			Name: "Generate checksums",
-			Run:  checksumStepRun(release.Checksums.File),
+			Name:  "Create archive (Windows)",
+			Run:   archiveStepRunWindows(),
+			Shell: "pwsh",
+			If:    "${{ matrix.os == 'windows' }}",
 		},
 		{
-			Name: "Upload to GitHub Release",
-			Uses: "softprops/action-gh-release@v1",
+			Name:  "Generate checksums (Unix)",
+			Run:   checksumStepRunUnix(release.Checksums.File),
+			Shell: "bash",
+			If:    "${{ matrix.os != 'windows' }}",
+		},
+		{
+			Name:  "Generate checksums (Windows)",
+			Run:   checksumStepRunWindows(release.Checksums.File),
+			Shell: "pwsh",
+			If:    "${{ matrix.os == 'windows' }}",
+		},
+		{
+			Name: "Upload artifacts",
+			Uses: "actions/upload-artifact@v4",
 			With: map[string]interface{}{
-				"files": "release-files.txt",
-			},
-			Env: map[string]string{
-				"GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+				"name": "release-${{ matrix.os }}-${{ matrix.arch }}",
+				"path": "release-files.txt\n${{ matrix.archive }}\nchecksums.txt",
 			},
 		},
 	}
@@ -240,6 +253,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 			},
 			Steps: steps,
 		},
+		"release": releaseJob(),
 	}
 
 	if dockerCfg.Enabled {
@@ -497,13 +511,15 @@ func publishChocolateyJob(projectRepo string, chocolateyCfg model.Chocolatey) Wo
 go run ./cmd/gpy --config gpy.yaml package --only chocolatey --output "pkg"`,
 			},
 			{
-				Name: "Pack Chocolatey package",
+				Name:  "Pack Chocolatey package",
+				Shell: "pwsh",
 				Run: `# Navigate to generated package and pack it
 cd "pkg\chocolatey\*"
 choco pack`,
 			},
 			{
-				Name: "Push to Chocolatey",
+				Name:  "Push to Chocolatey",
+				Shell: "pwsh",
 				Env: map[string]string{
 					"ChocolateyApiKey": "${{ secrets.CHOCOLATEY_API_KEY }}",
 				},
@@ -517,8 +533,8 @@ choco push "$($nupkg.FullName)" --source=https://push.chocolatey.org/`,
 	}
 }
 
-// buildStepRun generates the build step shell script.
-func buildStepRun(projectName string, goConfig model.Go) string {
+// buildStepRunWithMatrix generates the build step shell script, using matrix.bin-path for OS-aware binary naming.
+func buildStepRunWithMatrix(projectName string, goConfig model.Go) string {
 	ldflags := ""
 	if goConfig.LDFlags != "" {
 		ldflags = fmt.Sprintf(" -ldflags \"%s -X main.Version=${{ github.ref_name }}\"", goConfig.LDFlags)
@@ -527,32 +543,81 @@ func buildStepRun(projectName string, goConfig model.Go) string {
 	}
 
 	return fmt.Sprintf(
-		"go build -o %s%s %s",
-		projectName,
+		"go build -o ${{ matrix.bin-path }}%s %s",
 		ldflags,
 		goConfig.Main,
 	)
 }
 
 // archiveStepRun generates the archive creation step script.
-func archiveStepRun() string {
-	return `if [ "${{ runner.os }}" = "Windows" ]; then
-  cd "${{ env.BIN_PATH_DIR }}" 2>/dev/null || true
-  powershell -Command "Compress-Archive -Path ${{ env.BIN_PATH }} -DestinationPath ${{ env.ARCHIVE }} -Force"
-else
-  tar czf "${{ env.ARCHIVE }}" "${{ env.BIN_PATH }}"
-fi`
+// archiveStepRunUnix generates the archive creation step script for Unix platforms.
+func archiveStepRunUnix() string {
+	return `tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"`
+}
+
+// archiveStepRunWindows generates the archive creation step script for Windows (PowerShell).
+func archiveStepRunWindows() string {
+	return `Compress-Archive -Path "${{ matrix.bin-path }}" -DestinationPath "${{ matrix.archive }}" -Force`
 }
 
 // checksumStepRun generates the checksum generation step script.
-func checksumStepRun(checksumFile string) string {
+// checksumStepRunUnix generates the checksum generation step script for Unix platforms.
+func checksumStepRunUnix(checksumFile string) string {
 	if checksumFile == "" {
 		checksumFile = "checksums.txt"
 	}
 
-	return fmt.Sprintf(`sha256sum "${{ env.ARCHIVE }}" | sed 's/  .*\//  /' >> %s
-echo "${{ env.ARCHIVE }}" >> release-files.txt
+	return fmt.Sprintf(`sha256sum "${{ matrix.archive }}" | sed 's/  .*\//  /' >> %s
+echo "${{ matrix.archive }}" >> release-files.txt
 echo %s >> release-files.txt`, checksumFile, checksumFile)
+}
+
+// checksumStepRunWindows generates the checksum generation step script for Windows (PowerShell).
+func checksumStepRunWindows(checksumFile string) string {
+	if checksumFile == "" {
+		checksumFile = "checksums.txt"
+	}
+
+	return fmt.Sprintf(`$hash = (Get-FileHash -Path '${{ matrix.archive }}' -Algorithm SHA256).Hash
+Add-Content -Path %s -Value "$hash  ${{ matrix.archive }}"
+Add-Content -Path release-files.txt -Value '${{ matrix.archive }}'
+Add-Content -Path release-files.txt -Value '%s'`, checksumFile, checksumFile)
+}
+
+// releaseJob creates the release job that depends on build and uploads all artifacts.
+func releaseJob() WorkflowJob {
+	return WorkflowJob{
+		Needs:  []string{"build"},
+		RunsOn: "ubuntu-latest",
+		Permissions: map[string]string{
+			"contents": "write",
+		},
+		Steps: []WorkflowStep{
+			{
+				Name: "Download artifacts",
+				Uses: "actions/download-artifact@v4",
+				With: map[string]interface{}{
+					"path":           "release-artifacts",
+					"pattern":        "release-*",
+					"merge-multiple": false,
+				},
+			},
+			{
+				Name: "List artifacts",
+				Run:  "find release-artifacts -type f -exec ls -lh {} \\;",
+			},
+			{
+				Name: "Upload to GitHub Release",
+				Uses: "softprops/action-gh-release@v1",
+				With: map[string]interface{}{
+					"files": "release-artifacts/**/*",
+				},
+				Env: map[string]string{
+					"GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+				},
+			},
+		},
+	}
 }
 
 // marshalWorkflow converts the workflow document to YAML bytes.
