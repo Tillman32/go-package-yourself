@@ -57,7 +57,7 @@ jobs:
               env:
                 GOARCH: ${{ matrix.arch }}
                 GOOS: ${{ matrix.os }}
-              run: go build -o go-package-yourself -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
+              run: go build -o ${{ matrix.bin-path }} -ldflags "-X main.Version=${{ github.ref_name }}" ./cmd/gpy
             - name: Create archive (Unix)
               if: ${{ matrix.os != 'windows' }}
               run: tar czf "${{ matrix.archive }}" "${{ matrix.bin-path }}"
