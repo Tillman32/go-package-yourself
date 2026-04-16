@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.3] - 2026-04-15
+
+### Changed
+
+- **README: Docker in "Why gpy?"** — Docker is now listed as a packaging pain point in the problem statement, matching the other four channels (npm, Homebrew, Chocolatey, GitHub Actions)
+- **README: Custom badge** — Replaced the generic "status: production ready" badge with a `packaged with gpy` badge users can copy for their own projects
+- **Config reference: Docker section** — Added complete `packages.docker` field documentation (`enabled`, `image`, `port`, `env`, `cmd`) including defaults table entries
+
 ## [Unreleased]
 
 ### Added
