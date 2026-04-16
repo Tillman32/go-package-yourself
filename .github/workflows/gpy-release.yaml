@@ -48,7 +48,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                sparse-checkout: "false"
+                fetch-depth: 0
             - name: Setup Go
               uses: actions/setup-go@v4
               with:
