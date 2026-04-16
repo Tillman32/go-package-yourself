@@ -1,6 +1,6 @@
 # ── Build output ──────────────────────────────────────────────
 # Built binary (go build -o gpy ./cmd/gpy)
-gpy
+/gpy
 
 # Test binaries (go test -c)
 *.test
