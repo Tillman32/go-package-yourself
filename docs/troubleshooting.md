@@ -252,7 +252,7 @@ error: field Go.Main: required field is missing
        enabled: true
        packageName: "mycli"   # npm install -g mycli
        binName: "mycli"       # Run: mycli --help
-       nodeEngines: ">=18"    # Node.js version requirement
+        nodeEngines: ">=24"    # Node.js version requirement
    ```
 
 2. **Test npm package locally:**

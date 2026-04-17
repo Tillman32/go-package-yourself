@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"go-package-yourself/internal/generator"
@@ -37,50 +38,7 @@ func Init(opts *GlobalOpts, args []string) error {
 	}
 
 	// Build config with prompts
-	cfg := &model.Config{
-		SchemaVersion: 1,
-		Project:       model.Project{},
-		Go:            model.Go{},
-		Release: model.Release{
-			TagTemplate: "v{{version}}",
-			Platforms: []model.Platform{
-				{OS: "darwin", Arch: "amd64"},
-				{OS: "darwin", Arch: "arm64"},
-				{OS: "linux", Arch: "amd64"},
-				{OS: "linux", Arch: "arm64"},
-				{OS: "windows", Arch: "amd64"},
-			},
-			Archive: model.Archive{
-				NameTemplate:     "{{name}}_{{version}}_{{os}}_{{arch}}",
-				Format:           model.ArchiveFormat{Default: "tar.gz", Windows: "zip"},
-				BinPathInArchive: "{{name}}",
-			},
-			Checksums: model.Checksums{
-				File:      "checksums.txt",
-				Algorithm: "sha256",
-				Format:    "goreleaser",
-			},
-		},
-		Packages: model.Packages{
-			NPM: model.NPM{
-				Enabled:     false,
-				NodeEngines: ">=18",
-			},
-			Homebrew: model.Homebrew{
-				Enabled: false,
-			},
-			Chocolatey: model.Chocolatey{
-				Enabled: false,
-			},
-		},
-		GitHub: model.GitHub{
-			Workflows: model.GitHubWorkflows{
-				Enabled:      true,
-				WorkflowFile: ".github/workflows/gpy-release.yaml",
-				TagPatterns:  []string{"v*"},
-			},
-		},
-	}
+	cfg := defaultConfig()
 
 	// Prompt for values (unless --yes or --no-tui)
 	if !opts.Yes && !opts.NoTUI {
@@ -138,7 +96,7 @@ func interactiveInit(cfg *model.Config, projectRoot string) error {
 	if defaultRepo == "" {
 		defaultRepo = "owner/repo"
 	}
-	fmt.Printf("GitHub repo (owner/repo) [%s]: ", defaultRepo)
+	fmt.Printf("GitHub repository (owner/repo) [%s]: ", defaultRepo)
 	repo, _ := reader.ReadString('\n')
 	repo = strings.TrimSpace(repo)
 	if repo == "" {
@@ -148,10 +106,39 @@ func interactiveInit(cfg *model.Config, projectRoot string) error {
 		fmt.Printf("⚠ Using placeholder 'owner/repo'. Update gpy.yaml before publishing.\n")
 	}
 	cfg.Project.Repo = repo
+	cfg.Project.Homepage = defaultHomepage(repo)
+
+	// Project metadata
+	fmt.Printf("Project description (shown in package managers): ")
+	description, _ := reader.ReadString('\n')
+	cfg.Project.Description = strings.TrimSpace(description)
+
+	if cfg.Project.Homepage == "" {
+		fmt.Printf("Project homepage URL: ")
+	} else {
+		fmt.Printf("Project homepage URL [%s]: ", cfg.Project.Homepage)
+	}
+	homepage, _ := reader.ReadString('\n')
+	homepage = strings.TrimSpace(homepage)
+	if homepage != "" {
+		cfg.Project.Homepage = homepage
+	}
+
+	detectedLicense, detectedLicenseFile := detectLicense(projectRoot)
+	if detectedLicense == "" {
+		fmt.Printf("Project license (SPDX identifier, e.g. MIT): ")
+	} else {
+		fmt.Printf("Project license (SPDX identifier) [%s from %s]: ", detectedLicense, detectedLicenseFile)
+	}
+	license, _ := reader.ReadString('\n')
+	cfg.Project.License = strings.TrimSpace(license)
+	if cfg.Project.License == "" {
+		cfg.Project.License = detectedLicense
+	}
 
 	// Go main
 	defaultMain := fmt.Sprintf("./cmd/%s", name)
-	fmt.Printf("Go main package path [%s]: ", defaultMain)
+	fmt.Printf("Go main package path for builds [%s]: ", defaultMain)
 	main, _ := reader.ReadString('\n')
 	main = strings.TrimSpace(main)
 	if main == "" {
@@ -243,6 +230,7 @@ func applyDefaults(cfg *model.Config, projectRoot string) error {
 		repo = "owner/repo"
 	}
 	cfg.Project.Repo = repo
+	cfg.Project.Homepage = defaultHomepage(repo)
 
 	cfg.Go.Main = fmt.Sprintf("./cmd/%s", defaultName)
 	cfg.Packages.NPM.PackageName = defaultName
@@ -251,6 +239,118 @@ func applyDefaults(cfg *model.Config, projectRoot string) error {
 	cfg.Packages.Chocolatey.PackageID = defaultName
 
 	return nil
+}
+
+func defaultConfig() *model.Config {
+	return &model.Config{
+		SchemaVersion: 1,
+		Project:       model.Project{},
+		Go:            model.Go{},
+		Release: model.Release{
+			TagTemplate: "v{{version}}",
+			Platforms: []model.Platform{
+				{OS: "darwin", Arch: "amd64"},
+				{OS: "darwin", Arch: "arm64"},
+				{OS: "linux", Arch: "amd64"},
+				{OS: "linux", Arch: "arm64"},
+				{OS: "windows", Arch: "amd64"},
+			},
+			Archive: model.Archive{
+				NameTemplate:     "{{name}}_{{version}}_{{os}}_{{arch}}",
+				Format:           model.ArchiveFormat{Default: "tar.gz", Windows: "zip"},
+				BinPathInArchive: "{{name}}",
+			},
+			Checksums: model.Checksums{
+				File:      "checksums.txt",
+				Algorithm: "sha256",
+				Format:    "goreleaser",
+			},
+		},
+		Packages: model.Packages{
+			NPM: model.NPM{
+				Enabled:     false,
+				NodeEngines: ">=24",
+			},
+			Homebrew: model.Homebrew{
+				Enabled: false,
+			},
+			Chocolatey: model.Chocolatey{
+				Enabled: false,
+			},
+		},
+		GitHub: model.GitHub{
+			Workflows: model.GitHubWorkflows{
+				Enabled:      true,
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
+				TagPatterns:  []string{"v*"},
+			},
+		},
+	}
+}
+
+func defaultHomepage(repo string) string {
+	if repo == "" || repo == "owner/repo" {
+		return ""
+	}
+
+	return fmt.Sprintf("https://github.com/%s", repo)
+}
+
+func detectLicense(projectRoot string) (spdx string, sourceFile string) {
+	candidates := []string{
+		"LICENSE",
+		"LICENSE.md",
+		"LICENSE.txt",
+		"LICENCE",
+		"LICENCE.md",
+		"LICENCE.txt",
+		"COPYING",
+		"COPYING.md",
+		"COPYING.txt",
+	}
+
+	for _, name := range candidates {
+		data, err := os.ReadFile(filepath.Join(projectRoot, name))
+		if err == nil {
+			spdx := inferSPDXLicense(string(data))
+			if spdx != "" {
+				return spdx, name
+			}
+		}
+	}
+
+	return "", ""
+}
+
+func inferSPDXLicense(content string) string {
+	lower := strings.ToLower(content)
+
+	switch {
+	case strings.Contains(lower, "mit license"):
+		return "MIT"
+	case strings.Contains(lower, "apache license") && strings.Contains(lower, "version 2.0"):
+		return "Apache-2.0"
+	case strings.Contains(lower, "mozilla public license") && strings.Contains(lower, "version 2.0"):
+		return "MPL-2.0"
+	case strings.Contains(lower, "isc license"):
+		return "ISC"
+	case strings.Contains(lower, "bsd 3-clause") || strings.Contains(lower, "redistribution and use in source and binary forms") && strings.Contains(lower, "neither the name of"):
+		return "BSD-3-Clause"
+	case strings.Contains(lower, "bsd 2-clause") || strings.Contains(lower, "redistribution and use in source and binary forms") && strings.Contains(lower, "this list of conditions and the following disclaimer") && !strings.Contains(lower, "neither the name of"):
+		return "BSD-2-Clause"
+	case strings.Contains(lower, "gnu affero general public license") && strings.Contains(lower, "version 3"):
+		return "AGPL-3.0"
+	case strings.Contains(lower, "gnu general public license") && strings.Contains(lower, "version 3"):
+		return "GPL-3.0"
+	case strings.Contains(lower, "gnu general public license") && strings.Contains(lower, "version 2"):
+		return "GPL-2.0"
+	case strings.Contains(lower, "gnu lesser general public license") && strings.Contains(lower, "version 3"):
+		return "LGPL-3.0"
+	case strings.Contains(lower, "gnu lesser general public license") && strings.Contains(lower, "version 2.1"):
+		return "LGPL-2.1"
+	default:
+		return ""
+	}
 }
 
 // getGitRemote attempts to retrieve the GitHub remote URL.
@@ -340,10 +440,31 @@ project:
 	yamlData.WriteString(`
   repo: `)
 	yamlData.WriteString(cfg.Project.Repo)
+	if cfg.Project.Description != "" {
+		yamlData.WriteString(`
+  description: `)
+		yamlData.WriteString(strconv.Quote(cfg.Project.Description))
+	} else {
+		yamlData.WriteString(`
+  # description: Short description of your tool`)
+	}
+	if cfg.Project.Homepage != "" {
+		yamlData.WriteString(`
+  homepage: `)
+		yamlData.WriteString(strconv.Quote(cfg.Project.Homepage))
+	} else {
+		yamlData.WriteString(`
+  # homepage: https://example.com`)
+	}
+	if cfg.Project.License != "" {
+		yamlData.WriteString(`
+  license: `)
+		yamlData.WriteString(strconv.Quote(cfg.Project.License))
+	} else {
+		yamlData.WriteString(`
+  # license: MIT`)
+	}
 	yamlData.WriteString(`
-  # description: Short description of your tool
-  # homepage: https://example.com
-  # license: MIT
 
 go:
   main: `)
@@ -386,7 +507,7 @@ packages:
 		yamlData.WriteString(cfg.Packages.NPM.PackageName)
 	}
 	yamlData.WriteString(`
-    nodeEngines: ">=18"
+    nodeEngines: ">=24"
 
   homebrew:
     enabled: `)

@@ -157,9 +157,17 @@ func TestPackageJSON(t *testing.T) {
 		t.Errorf("package.json engines field is not a map")
 	}
 
-	// Check postinstall field
-	if got := pkg["postinstall"]; got != "node install.js" {
-		t.Errorf("package.json postinstall = %q, want %q", got, "node install.js")
+	if _, ok := pkg["postinstall"]; ok {
+		t.Fatalf("package.json should not contain a top-level postinstall field")
+	}
+
+	// Check scripts.postinstall field
+	if scripts, ok := pkg["scripts"].(map[string]interface{}); ok {
+		if got := scripts["postinstall"]; got != "node install.js" {
+			t.Errorf("package.json scripts.postinstall = %q, want %q", got, "node install.js")
+		}
+	} else {
+		t.Errorf("package.json scripts field is not a map")
 	}
 }
 
@@ -297,7 +305,7 @@ func TestReadmeGeneration(t *testing.T) {
 		Packages: model.Packages{
 			NPM: model.NPM{
 				Enabled:     true,
-				NodeEngines: ">=18",
+				NodeEngines: ">=24",
 			},
 		},
 	}
@@ -326,7 +334,7 @@ func TestReadmeGeneration(t *testing.T) {
 		t.Error("README missing help command")
 	}
 
-	if !strings.Contains(readmeStr, ">=18") {
+	if !strings.Contains(readmeStr, ">=24") {
 		t.Error("README missing Node.js requirement")
 	}
 }

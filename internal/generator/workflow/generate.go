@@ -390,7 +390,7 @@ func publishNpmJob(projectRepo string, npmCfg model.NPM) WorkflowJob {
 				Name: "Setup Node.js",
 				Uses: "actions/setup-node@v4",
 				With: map[string]interface{}{
-					"node-version": "18",
+					"node-version": "24",
 					"registry-url": "https://registry.npmjs.org/",
 				},
 			},

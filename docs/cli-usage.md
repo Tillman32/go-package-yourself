@@ -50,6 +50,9 @@ When run without `--yes`, the wizard asks:
 |--------|---------|-------|
 | Project name | directory name | Used as the binary name. |
 | GitHub repo (`owner/repo`) | auto-detect from git remote | Used to construct release download URLs. |
+| Project description | empty | Shared metadata used across package manifests. |
+| Project homepage | `https://github.com/<owner>/<repo>` when repo is known | Shared metadata used across package manifests. |
+| Project license (SPDX) | empty | Prefer SPDX identifiers like `MIT` or `Apache-2.0`. |
 | Go main package path | `./cmd/<name>` | Build target passed to `go build`. |
 | Enable npm package? | n | Generates `packaging/npm/` launcher. |
 | → npm package name | project name | Name published to npmjs.org. |
@@ -70,6 +73,8 @@ gpy --project-root /path/to/project init --yes
 ```
 
 Uses all defaults. Safe for CI or project scaffolding scripts.
+
+When a GitHub remote can be detected, `project.homepage` defaults to the repository URL. `project.description` and `project.license` remain empty unless provided.
 
 ### Output
 

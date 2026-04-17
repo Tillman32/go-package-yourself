@@ -10,11 +10,13 @@
   "license": "",
   "main": "index.js",
   "name": "testapp",
-  "postinstall": "node install.js",
   "preferGlobal": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/testuser/testapp"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
   },
   "version": "1.0.0"
 }

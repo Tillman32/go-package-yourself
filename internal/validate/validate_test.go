@@ -523,7 +523,7 @@ func TestConfigWithOptionalFields(t *testing.T) {
 				Enabled:     true,
 				PackageName: "my-tool",
 				BinName:     "mytool",
-				NodeEngines: ">=18",
+				NodeEngines: ">=24",
 			},
 			Homebrew: model.Homebrew{
 				Enabled:     true,

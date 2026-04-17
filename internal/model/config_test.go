@@ -44,7 +44,7 @@ packages:
     enabled: true
     packageName: "my-tool"
     binName: "mytool"
-    nodeEngines: ">=18"
+    nodeEngines: ">=24"
   homebrew:
     enabled: true
     tap: "owner/homebrew-tap"

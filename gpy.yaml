@@ -12,9 +12,9 @@ schemaVersion: 1
 project:
   name: go-package-yourself
   repo: Tillman32/go-package-yourself
-  # description: Short description of your tool
-  # homepage: https://example.com
-  # license: MIT
+  description: "A Go packager for NPM, Homebrew, Chocolatey and Docker"
+  homepage: "https://github.com/Tillman32/go-package-yourself"
+  license: "MIT"
 
 go:
   main: ./cmd/gpy
