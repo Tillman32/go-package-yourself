@@ -31,7 +31,7 @@ Thumbs.db
 vendor/
 tmp/
 temp/
-.tmp/
+.tmp/*
 *.log
 
 # Compiled binaries from go build
