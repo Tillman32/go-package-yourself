@@ -45,7 +45,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.22"
+          go-version: "1.25.5"
 
       - name: Build gpy
         run: go build -o gpy -ldflags "-X main.Version=$(cat VERSION)" ./cmd/gpy

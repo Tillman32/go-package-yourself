@@ -184,8 +184,8 @@ type WorkflowStep struct {
 
 // newWorkflow constructs the complete workflow document.
 func newWorkflow(projectName string, projectRepo string, goConfig model.Go, release model.Release, dockerCfg model.Docker, npmCfg model.NPM, homebrewCfg model.Homebrew, chocolateyCfg model.Chocolatey, matrixEntries []MatrixEntry, tagPatterns []string) WorkflowDoc {
-	// Determine Go version to use (hard-coded to minimize complexity for now)
-	goVersion := "1.22"
+	// Determine Go version to use (hard-coded to match go.mod for now)
+	goVersion := "1.25.5"
 
 	steps := []WorkflowStep{
 		{
@@ -407,7 +407,7 @@ func publishNpmJob(projectName string, npmCfg model.NPM) WorkflowJob {
 				Name: "Setup Go",
 				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
-					"go-version": "1.22",
+					"go-version": "1.25.5",
 				},
 			},
 			{
@@ -444,7 +444,7 @@ func publishHomebrewJob(projectName string, homebrewCfg model.Homebrew) Workflow
 				Name: "Setup Go",
 				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
-					"go-version": "1.22",
+					"go-version": "1.25.5",
 				},
 			},
 			{
@@ -508,7 +508,7 @@ func publishChocolateyJob(projectName string, chocolateyCfg model.Chocolatey) Wo
 				Name: "Setup Go",
 				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
-					"go-version": "1.22",
+					"go-version": "1.25.5",
 				},
 			},
 			{

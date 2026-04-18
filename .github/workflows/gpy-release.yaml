@@ -52,7 +52,7 @@ jobs:
             - name: Setup Go
               uses: actions/setup-go@v6
               with:
-                go-version: "1.22"
+                go-version: 1.25.5
             - name: Build binary
               env:
                 GOARCH: ${{ matrix.arch }}
@@ -99,7 +99,7 @@ jobs:
             - name: Setup Go
               uses: actions/setup-go@v6
               with:
-                go-version: "1.22"
+                go-version: 1.25.5
             - name: Pack Chocolatey package
               run: |-
                 # Navigate to committed generated package and pack it
@@ -126,7 +126,7 @@ jobs:
             - name: Setup Go
               uses: actions/setup-go@v6
               with:
-                go-version: "1.22"
+                go-version: 1.25.5
             - name: Publish Homebrew formula
               env:
                 GH_TOKEN: ${{ secrets.HOMEBREW_CORE_PAT }}
@@ -175,7 +175,7 @@ jobs:
             - name: Setup Go
               uses: actions/setup-go@v6
               with:
-                go-version: "1.22"
+                go-version: 1.25.5
             - name: Publish npm package
               env:
                 NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
