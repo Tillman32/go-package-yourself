@@ -56,7 +56,7 @@ func TestHomebrewFormulaSnapshot(t *testing.T) {
 	}
 
 	// Load generated file
-	generatedPath := filepath.Join(tmpdir, "packaging", "homebrew", "testapp.rb")
+	generatedPath := filepath.Join(tmpdir, "packaging", "homebrew", "Testapp.rb")
 	AssertFileExists(t, generatedPath)
 
 	// Load golden file
