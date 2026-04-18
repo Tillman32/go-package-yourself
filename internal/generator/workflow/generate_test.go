@@ -552,6 +552,66 @@ func TestTagPatterns(t *testing.T) {
 	}
 }
 
+func TestReleaseJobOnlyRunsOnTagPushes(t *testing.T) {
+	cfg := &model.Config{
+		Project: model.Project{Name: "mytool"},
+		Go:      model.Go{Main: "./cmd/mytool"},
+		Release: model.Release{
+			Platforms: []model.Platform{{OS: "linux", Arch: "amd64"}},
+			Archive: model.Archive{
+				NameTemplate:     "{{name}}_{{version}}_{{os}}_{{arch}}",
+				Format:           model.ArchiveFormat{Default: "tar.gz"},
+				BinPathInArchive: "{{name}}",
+			},
+		},
+		GitHub: model.GitHub{
+			Workflows: model.GitHubWorkflows{
+				WorkflowFile: ".github/workflows/gpy-release.yaml",
+				TagPatterns:  []string{"v*"},
+			},
+		},
+	}
+
+	ctx := generator.Context{
+		Config: cfg,
+		ArchiveName: func(os, arch string) (archiveFilename, binPathInArchive string, err error) {
+			params := naming.ArchiveNameParams{
+				Name:                cfg.Project.Name,
+				Version:             "",
+				OS:                  os,
+				Arch:                arch,
+				Format:              "tar.gz",
+				ArchiveNameTemplate: cfg.Release.Archive.NameTemplate,
+				BinPathTemplate:     cfg.Release.Archive.BinPathInArchive,
+			}
+			return naming.ArchiveName(params)
+		},
+	}
+
+	outputs, err := New().Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	var doc WorkflowDoc
+	if err := yaml.Unmarshal(outputs[0].Content, &doc); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+
+	releaseJob, ok := doc.Jobs["release"]
+	if !ok {
+		t.Fatalf("release job not found")
+	}
+
+	if releaseJob.If != "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')" {
+		t.Fatalf("release job if = %q", releaseJob.If)
+	}
+
+	if releaseJob.Permissions != nil {
+		t.Fatalf("release job permissions = %#v, want nil", releaseJob.Permissions)
+	}
+}
+
 // TestLDFlagsHandling tests that ldflags are correctly included in build command.
 func TestLDFlagsHandling(t *testing.T) {
 	tests := []struct {

@@ -154,6 +154,7 @@ type PushTrigger struct {
 type WorkflowJob struct {
 	Needs       []string          `yaml:"needs,omitempty"`
 	Permissions map[string]string `yaml:"permissions,omitempty"`
+	If          string            `yaml:"if,omitempty"`
 	RunsOn      string            `yaml:"runs-on"`
 	Strategy    *JobStrategy      `yaml:"strategy,omitempty"`
 	Steps       []WorkflowStep    `yaml:"steps"`
@@ -183,8 +184,8 @@ type WorkflowStep struct {
 
 // newWorkflow constructs the complete workflow document.
 func newWorkflow(projectName string, projectRepo string, goConfig model.Go, release model.Release, dockerCfg model.Docker, npmCfg model.NPM, homebrewCfg model.Homebrew, chocolateyCfg model.Chocolatey, matrixEntries []MatrixEntry, tagPatterns []string) WorkflowDoc {
-	// Determine Go version to use (hard-coded to minimize complexity for now)
-	goVersion := "1.22"
+	// Determine Go version to use (hard-coded to match go.mod for now)
+	goVersion := "1.25.5"
 
 	steps := []WorkflowStep{
 		{
@@ -196,7 +197,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		},
 		{
 			Name: "Setup Go",
-			Uses: "actions/setup-go@v4",
+			Uses: "actions/setup-go@v6",
 			With: map[string]interface{}{
 				"go-version": goVersion,
 			},
@@ -404,9 +405,9 @@ func publishNpmJob(projectName string, npmCfg model.NPM) WorkflowJob {
 			},
 			{
 				Name: "Setup Go",
-				Uses: "actions/setup-go@v4",
+				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
-					"go-version": "1.22",
+					"go-version": "1.25.5",
 				},
 			},
 			{
@@ -441,9 +442,9 @@ func publishHomebrewJob(projectName string, homebrewCfg model.Homebrew) Workflow
 			},
 			{
 				Name: "Setup Go",
-				Uses: "actions/setup-go@v4",
+				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
-					"go-version": "1.22",
+					"go-version": "1.25.5",
 				},
 			},
 			{
@@ -505,9 +506,9 @@ func publishChocolateyJob(projectName string, chocolateyCfg model.Chocolatey) Wo
 			},
 			{
 				Name: "Setup Go",
-				Uses: "actions/setup-go@v4",
+				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
-					"go-version": "1.22",
+					"go-version": "1.25.5",
 				},
 			},
 			{
@@ -604,10 +605,8 @@ Add-Content -Path release-files.txt -Value '%s'`, checksumFile, checksumFile)
 func releaseJob() WorkflowJob {
 	return WorkflowJob{
 		Needs:  []string{"build"},
+		If:     "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')",
 		RunsOn: "ubuntu-latest",
-		Permissions: map[string]string{
-			"contents": "write",
-		},
 		Steps: []WorkflowStep{
 			{
 				Name: "Download artifacts",
@@ -624,7 +623,7 @@ func releaseJob() WorkflowJob {
 			},
 			{
 				Name: "Upload to GitHub Release",
-				Uses: "softprops/action-gh-release@v1",
+				Uses: "softprops/action-gh-release@v3",
 				With: map[string]interface{}{
 					"files": "release-artifacts/**/*",
 				},

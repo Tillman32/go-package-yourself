@@ -1,0 +1,78 @@
+# Canonical dogfooding workflow for validating `gpy` against the external
+# `Tillman32/gpy-test` sandbox repo.
+#
+# `pr-validate.yaml` calls this workflow before merge. Keep release orchestration
+# separate unless the team explicitly decides the duplicate pre-release runtime is
+# worth it.
+
+name: Sandbox Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      sandbox-ref:
+        description: Optional ref to checkout in Tillman32/gpy-test
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      sandbox-ref:
+        description: Optional ref to checkout in Tillman32/gpy-test
+        required: false
+        type: string
+
+jobs:
+  sandbox-gpy:
+    name: Validate gpy against sandbox repo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout sandbox repo
+        if: ${{ inputs['sandbox-ref'] == '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: Tillman32/gpy-test
+          path: gpy-test
+
+      - name: Checkout sandbox repo at requested ref
+        if: ${{ inputs['sandbox-ref'] != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: Tillman32/gpy-test
+          ref: ${{ inputs['sandbox-ref'] }}
+          path: gpy-test
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+
+      - name: Build gpy
+        run: go build -o gpy -ldflags "-X main.Version=$(cat VERSION)" ./cmd/gpy
+
+      - name: gpy version
+        run: ./gpy version
+
+      - name: Sandbox repo tests
+        working-directory: gpy-test
+        run: go test ./...
+
+      - name: Sandbox repo build
+        working-directory: gpy-test
+        run: go build ./...
+
+      - name: Regenerate sandbox packaging artifacts
+        run: ./gpy --project-root "$GITHUB_WORKSPACE/gpy-test" package --sync
+
+      - name: Regenerate sandbox workflow
+        run: ./gpy --project-root "$GITHUB_WORKSPACE/gpy-test" workflow --sync
+
+      - name: Verify sandbox repo is unchanged
+        working-directory: gpy-test
+        run: |
+          if [[ -n "$(git status --short)" ]]; then
+            git status --short
+            git diff
+            echo "::error::Sandbox repo outputs are out of sync. Regenerate in Tillman32/gpy-test and commit the result."
+            exit 1
+          fi
