@@ -513,6 +513,77 @@ packages:
     authors: "Your Name"
 ```
 
+### `packages.docker` (Optional)
+
+Docker image configuration.
+
+#### `packages.docker.enabled` (Optional)
+
+**Type:** boolean  
+**Default:** `false`
+
+Enable Docker image generation (produces `Dockerfile` + `.dockerignore`).
+
+```yaml
+packages:
+  docker:
+    enabled: true
+```
+
+#### `packages.docker.image` (Optional)
+
+**Type:** string  
+**Default:** `project.name`
+
+Docker image name (used in `docker build -t <image>`).
+
+```yaml
+packages:
+  docker:
+    image: "myorg/mycli"
+```
+
+#### `packages.docker.port` (Optional)
+
+**Type:** integer  
+**Default:** None
+
+Expose a port in the Dockerfile (`EXPOSE <port>`). Omit if your binary doesn't serve HTTP.
+
+```yaml
+packages:
+  docker:
+    port: 8080
+```
+
+#### `packages.docker.env` (Optional)
+
+**Type:** map[string]string  
+**Default:** Empty
+
+Environment variables to set in the image via `ENV`.
+
+```yaml
+packages:
+  docker:
+    env:
+      LOG_LEVEL: "info"
+      CONFIG_PATH: "/etc/mycli/config.yaml"
+```
+
+#### `packages.docker.cmd` (Optional)
+
+**Type:** string[]  
+**Default:** `["/usr/local/bin/<name>"]`
+
+Override the default `CMD` in the Dockerfile.
+
+```yaml
+packages:
+  docker:
+    cmd: ["/usr/local/bin/mycli", "--config", "/etc/mycli/config.yaml"]
+```
+
 ---
 
 ## `github` Section (Optional)
@@ -866,6 +937,9 @@ After `npm install -g @myorg/mycli`, users run `mycli` (not `@myorg/mycli`).
 | `packages.chocolatey.enabled` | `false` |
 | `packages.chocolatey.packageId` | `project.name` |
 | `packages.chocolatey.authors` | Empty string |
+| `packages.docker.enabled` | `false` |
+| `packages.docker.image` | `project.name` |
+| `packages.docker.cmd` | `["/usr/local/bin/<name>"]` |
 | `github.workflows.enabled` | `false` |
 | `github.workflows.workflowFile` | `".github/workflows/gpy-release.yaml"` |
 | `github.workflows.tagPatterns` | `["v*"]` |

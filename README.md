@@ -7,7 +7,7 @@ gpy is a command-line tool for Go developers who want to distribute binaries acr
 [![Go](https://img.shields.io/badge/Go-1.22%2B-blue)](https://golang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-154%2B-brightgreen.svg)](#testing)
-![Status](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)
+[![gpy](https://img.shields.io/badge/packaged%20with-gpy-6C47FF.svg)](https://github.com/brandon/go-package-yourself)
 
 ---
 
@@ -18,6 +18,7 @@ Packaging Go binaries for multiple package managers is **tedious and error-prone
 - **npm**: Requires a wrapper script in Node, SHA256 verification, architecture detection
 - **Homebrew**: Ruby DSL, platform-specific build blocks, SHA256 hashes  
 - **Chocolatey**: PowerShell verification, XML `.nuspec` metadata, Windows-specific handling
+- **Docker**: Multi-stage Dockerfile, `.dockerignore`, image naming conventions, build args
 - **GitHub Actions**: CI/CD workflow YAML to run `go build` on multiple platforms, archive binaries, compute checksums
 
 gpy eliminates this busywork. Define your project once in YAML, and gpy generates:
