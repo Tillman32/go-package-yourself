@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>go-package-yourself</id>
+    <version>0.0.0</version>
+    <title>go-package-yourself</title>
+    <description>Package for go-package-yourself</description>
+    <authors>Unknown</authors>
+    <owners>Unknown</owners>
+    <licenseUrl>https://github.com/Tillman32/go-package-yourself/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Tillman32/go-package-yourself</projectUrl>
+    <packageSourceUrl>https://github.com/Tillman32/go-package-yourself/releases</packageSourceUrl>
+    <tags>cli tool package-manager</tags>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

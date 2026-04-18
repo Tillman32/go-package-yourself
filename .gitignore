@@ -31,8 +31,8 @@ Thumbs.db
 vendor/
 tmp/
 temp/
-.tmp/
+.tmp/*
 *.log
 
-# Compiled binaries from go build
-go-package-yourself
+# Compiled binary from `go build -o go-package-yourself`
+/go-package-yourself
