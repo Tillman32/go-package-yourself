@@ -252,7 +252,7 @@ error: field Go.Main: required field is missing
        enabled: true
        packageName: "mycli"   # npm install -g mycli
        binName: "mycli"       # Run: mycli --help
-       nodeEngines: ">=18"    # Node.js version requirement
+        nodeEngines: ">=24"    # Node.js version requirement
    ```
 
 2. **Test npm package locally:**
@@ -523,12 +523,16 @@ gpy package
 gpy package
 
 # Test npm locally
+cd packaging/npm/mycli
 npm link
 mycli --help
 npm unlink
 
+# Return to repo root before committing
+cd ../..
+
 # Commit and push
-git add gpy.yaml package.json homebrew.rb chocolatey.ps1
+git add gpy.yaml packaging/ .github/workflows/gpy-release.yaml
 git commit -m "chore: update gpy packages"
 git push
 

@@ -16,7 +16,7 @@ import "go-package-yourself/internal/model"
 //   - Release.Checksums.File: "checksums.txt" (if empty)
 //   - Release.Checksums.Algorithm: "sha256" (fixed v1)
 //   - Release.Checksums.Format: "goreleaser" (fixed v1)
-//   - Packages.NPM.NodeEngines: ">=18" (if empty)
+//   - Packages.NPM.NodeEngines: ">=24" (if empty)
 //   - All package fields (enabled, etc.): false by default (if not set)
 //   - Packages.Docker.ImageName: project.name (if empty)
 //   - Packages.Docker.Cmd: "./{{name}}" (if empty)
@@ -68,7 +68,7 @@ func ApplyDefaults(cfg *model.Config) {
 	// Packages defaults
 	// NPM
 	if cfg.Packages.NPM.NodeEngines == "" {
-		cfg.Packages.NPM.NodeEngines = ">=18"
+		cfg.Packages.NPM.NodeEngines = ">=24"
 	}
 
 	// Homebrew has no additional defaults beyond zero values (enabled=false by default)

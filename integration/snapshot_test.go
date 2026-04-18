@@ -2,6 +2,7 @@ package integration
 
 import (
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"testing"
 	"time"
@@ -276,7 +277,7 @@ func compareJSONFields(t *testing.T, name string, actual, expected map[string]in
 			continue // Both missing is okay
 		}
 
-		if expectedVal != actualVal {
+		if !reflect.DeepEqual(expectedVal, actualVal) {
 			t.Errorf("%s: field %q expected %v, got %v", name, field, expectedVal, actualVal)
 		}
 	}

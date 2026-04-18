@@ -405,18 +405,19 @@ After `npm install -g mycli`, users can run `mycli` from any terminal.
 #### `packages.npm.nodeEngines` (Optional)
 
 **Type:** string  
-**Default:** `">=18"`
+**Default:** `">=24"`
 
 Node.js version requirement in package.json `engines.node` field.
 
 ```yaml
 packages:
   npm:
-    nodeEngines: ">=18"
+    nodeEngines: ">=24"
 ```
 
 **Examples:**
-- `">=18"` — Node.js 18 or later
+- `">=24"` — Node.js 24 or later
+- `">=20"` — Node.js 20 or later
 - `">=16"` — Node.js 16 or later
 - `"18.x"` — Node.js 18.x only
 
@@ -858,7 +859,7 @@ After `npm install -g @myorg/mycli`, users run `mycli` (not `@myorg/mycli`).
 | `packages.npm.enabled` | `false` |
 | `packages.npm.packageName` | `project.name` |
 | `packages.npm.binName` | `project.name` |
-| `packages.npm.nodeEngines` | `">=18"` |
+| `packages.npm.nodeEngines` | `">=24"` |
 | `packages.homebrew.enabled` | `false` |
 | `packages.homebrew.tap` | Empty string |
 | `packages.homebrew.formulaName` | `project.name` |

@@ -100,7 +100,7 @@ type NPM struct {
 	Enabled     bool   `yaml:"enabled"`     // default false
 	PackageName string `yaml:"packageName"` // optional: npm package name (default project.name)
 	BinName     string `yaml:"binName"`     // optional: executable name (default project.name)
-	NodeEngines string `yaml:"nodeEngines"` // optional: Node.js version requirement (default ">=18")
+	NodeEngines string `yaml:"nodeEngines"` // optional: Node.js version requirement (default ">=24")
 }
 
 // Homebrew contains Homebrew formula configuration.

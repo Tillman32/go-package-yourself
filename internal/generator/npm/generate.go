@@ -40,10 +40,10 @@ func (g *Generator) Generate(ctx generator.Context) ([]generator.FileOutput, err
 		binName = cfg.Project.Name
 	}
 
-	// Use NodeEngines or default to ">=18"
+	// Use NodeEngines or default to ">=24"
 	nodeEngines := npm.NodeEngines
 	if nodeEngines == "" {
-		nodeEngines = ">=18"
+		nodeEngines = ">=24"
 	}
 
 	// Get repo owner and name
@@ -153,8 +153,10 @@ func generatePackageJSON(cfg *model.Config, packageName, binName, nodeEngines, v
 			"type": "git",
 			"url":  fmt.Sprintf("https://github.com/%s", cfg.Project.Repo),
 		},
-		"main":        "index.js",
-		"postinstall": "node install.js",
+		"main": "index.js",
+		"scripts": map[string]string{
+			"postinstall": "node install.js",
+		},
 	}
 
 	// Marshal to JSON with indentation

@@ -1,7 +1,16 @@
-# CI workflow for pull request validation
-# Validates that changes to gpy do not break the generated release workflow.
-# Publishing steps are intentionally skipped — no secrets are passed, so the
-# `if: env.SECRET != ''` guards in gpy-release.yaml short-circuit all pushes.
+# CI workflow for pull request validation.
+#
+# This validates `gpy` in two ways:
+# 1. against the dedicated consumer sandbox repo (`Tillman32/gpy-test`)
+# 2. against this repo's generated release workflow via `workflow_call`
+#
+# The sandbox job exercises the real dogfooding path by building `gpy` from the
+# PR branch, running it against a separate checkout with `--project-root`, and
+# failing if committed generated outputs in the sandbox would change.
+#
+# Publishing steps are intentionally skipped in `release-dry-run` because no
+# secrets are passed, so the `if: env.SECRET != ''` guards in
+# `gpy-release.yaml` short-circuit all pushes.
 
 name: PR Validate
 
@@ -36,11 +45,17 @@ jobs:
       - name: go vet
         run: go vet ./...
 
-  smoke-gpy:
-    name: Smoke-test gpy commands
+  sandbox-gpy:
+    name: Validate gpy against sandbox repo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout sandbox repo
+        uses: actions/checkout@v4
+        with:
+          repository: Tillman32/gpy-test
+          path: gpy-test
 
       - uses: actions/setup-go@v4
         with:
@@ -52,21 +67,33 @@ jobs:
       - name: gpy version
         run: ./gpy version
 
-      - name: gpy package (dry-run — generate artifacts only)
-        run: ./gpy --config gpy.yaml package --version 0.0.0-pr
+      - name: Sandbox repo tests
+        working-directory: gpy-test
+        run: go test ./...
 
-      - name: gpy workflow --write (regenerate and diff)
+      - name: Sandbox repo build
+        working-directory: gpy-test
+        run: go build ./...
+
+      - name: Regenerate sandbox packaging artifacts
+        run: ./gpy --project-root "$GITHUB_WORKSPACE/gpy-test" package --sync
+
+      - name: Regenerate sandbox workflow
+        run: ./gpy --project-root "$GITHUB_WORKSPACE/gpy-test" workflow --sync
+
+      - name: Verify sandbox repo is unchanged
+        working-directory: gpy-test
         run: |
-          cp .github/workflows/gpy-release.yaml gpy-release.yaml.bak
-          ./gpy --config gpy.yaml workflow --sync
-          if ! diff -u gpy-release.yaml.bak .github/workflows/gpy-release.yaml; then
-            echo "::error::gpy-release.yaml is out of sync with gpy.yaml. Run 'gpy --config gpy.yaml workflow --sync' and commit the result."
+          if [[ -n "$(git status --short)" ]]; then
+            git status --short
+            git diff
+            echo "::error::Sandbox repo outputs are out of sync. Regenerate in Tillman32/gpy-test and commit the result."
             exit 1
           fi
 
-  # Run the real release workflow via workflow_call — but pass NO secrets,
-  # so every publish step is skipped by its own `if: env.SECRET != ''` guard.
-  # This validates the build matrix (compile + archive + checksum) end-to-end.
+  # Keep this separate from the sandbox validation above. It still validates
+  # this repo's generated reusable workflow end-to-end, even though generated
+  # consumer workflows are not yet self-bootstrapping in external repos.
   release-dry-run:
     name: Release dry-run (no publish)
     uses: ./.github/workflows/gpy-release.yaml

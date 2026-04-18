@@ -168,7 +168,7 @@ packages:
     enabled: true
     packageName: "my-tool"
     binName: "mytool"
-    nodeEngines: ">=18"
+    nodeEngines: ">=24"
   homebrew:
     enabled: true
     tap: "owner/homebrew-tap"
@@ -249,7 +249,7 @@ func TestApplyDefaults(t *testing.T) {
 				if cfg.Release.Checksums.Format != "goreleaser" {
 					return errors.New("Checksums.Format not set to goreleaser")
 				}
-				if cfg.Packages.NPM.NodeEngines != ">=18" {
+				if cfg.Packages.NPM.NodeEngines != ">=24" {
 					return errors.New("NPM.NodeEngines default not applied")
 				}
 				return nil
