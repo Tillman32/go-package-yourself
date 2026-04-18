@@ -949,6 +949,18 @@ func TestWorkflow_NpmJobPresent(t *testing.T) {
 	if publishNpmJob.RunsOn != "ubuntu-latest" {
 		t.Errorf("publish-npm job RunsOn = %q, want %q", publishNpmJob.RunsOn, "ubuntu-latest")
 	}
+
+	if len(publishNpmJob.Steps) == 0 {
+		t.Fatalf("publish-npm job has no steps")
+	}
+
+	run := publishNpmJob.Steps[len(publishNpmJob.Steps)-1].Run
+	if !strings.Contains(run, "cd \"packaging/npm/mytool-launcher\"") {
+		t.Errorf("publish-npm run step = %q, want committed packaging path", run)
+	}
+	if strings.Contains(run, "go run ./cmd/gpy") {
+		t.Errorf("publish-npm run step should not regenerate packaging in CI: %q", run)
+	}
 }
 
 // TestWorkflow_HomebrewJobPresent tests that the homebrew job is included when enabled.
@@ -1029,6 +1041,18 @@ func TestWorkflow_HomebrewJobPresent(t *testing.T) {
 	if publishHomebrewJob.RunsOn != "ubuntu-latest" {
 		t.Errorf("publish-homebrew job RunsOn = %q, want %q", publishHomebrewJob.RunsOn, "ubuntu-latest")
 	}
+
+	if len(publishHomebrewJob.Steps) == 0 {
+		t.Fatalf("publish-homebrew job has no steps")
+	}
+
+	run := publishHomebrewJob.Steps[len(publishHomebrewJob.Steps)-1].Run
+	if !strings.Contains(run, "FORMULA_FILE=\"../packaging/homebrew/Mytool.rb\"") {
+		t.Errorf("publish-homebrew run step = %q, want committed formula path", run)
+	}
+	if strings.Contains(run, "go run ./cmd/gpy") {
+		t.Errorf("publish-homebrew run step should not regenerate packaging in CI: %q", run)
+	}
 }
 
 // TestWorkflow_ChocolateyJobPresent tests that the chocolatey job is included when enabled.
@@ -1107,6 +1131,28 @@ func TestWorkflow_ChocolateyJobPresent(t *testing.T) {
 
 	if publishChocolateyJob.RunsOn != "windows-latest" {
 		t.Errorf("publish-chocolatey job RunsOn = %q, want %q", publishChocolateyJob.RunsOn, "windows-latest")
+	}
+
+	if len(publishChocolateyJob.Steps) < 2 {
+		t.Fatalf("publish-chocolatey job has too few steps: %d", len(publishChocolateyJob.Steps))
+	}
+
+	packRun := ""
+	for _, step := range publishChocolateyJob.Steps {
+		if step.Name == "Pack Chocolatey package" {
+			packRun = step.Run
+			break
+		}
+	}
+	if packRun == "" {
+		t.Fatalf("publish-chocolatey job missing pack step")
+	}
+
+	if !strings.Contains(packRun, "cd \"packaging\\chocolatey\\mytool\"") {
+		t.Errorf("publish-chocolatey pack step = %q, want committed packaging path", packRun)
+	}
+	if strings.Contains(packRun, "go run ./cmd/gpy") {
+		t.Errorf("publish-chocolatey pack step should not regenerate packaging in CI: %q", packRun)
 	}
 }
 

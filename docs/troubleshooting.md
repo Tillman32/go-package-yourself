@@ -523,12 +523,16 @@ gpy package
 gpy package
 
 # Test npm locally
+cd packaging/npm/mycli
 npm link
 mycli --help
 npm unlink
 
+# Return to repo root before committing
+cd ../..
+
 # Commit and push
-git add gpy.yaml package.json homebrew.rb chocolatey.ps1
+git add gpy.yaml packaging/ .github/workflows/gpy-release.yaml
 git commit -m "chore: update gpy packages"
 git push
 

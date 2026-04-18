@@ -80,6 +80,8 @@ When a GitHub remote can be detected, `project.homepage` defaults to the reposit
 
 Creates `gpy.yaml` in the project root. Existing file is **overwritten**.
 
+`gpy.yaml` is the source of truth. Generated package artifacts and workflow files are expected to be regenerated from it, not edited by hand.
+
 ---
 
 ## `gpy package`
@@ -110,6 +112,8 @@ gpy package [flags]
 | `docker` | `packages.docker.enabled: true` | `packaging/docker/` |
 
 When no generators are enabled and `--only` is not set, a helpful message is printed and the command exits cleanly.
+
+Generated outputs under `packaging/` are intended to be committed. If you change `gpy.yaml`, rerun `gpy package --sync` and commit the regenerated files. Manual edits to generated files are overwritten.
 
 ### Examples
 
@@ -160,6 +164,8 @@ The generated workflow (`release.yml`) includes:
 
 Publishing jobs are **conditionally included** — they only appear in the workflow when the corresponding package is enabled in `gpy.yaml`.
 
+The generated workflow is also intended to be committed. Release publishing jobs use the committed generated files under `packaging/` rather than regenerating them in CI.
+
 ### Examples
 
 ```bash
@@ -173,7 +179,7 @@ gpy workflow --write
 gpy --project-root /path/to/project workflow --write
 ```
 
-> **Note:** `--write` will not overwrite an existing workflow file. Delete it first if you want to regenerate.
+> **Note:** `--write` will not overwrite an existing workflow file. Use `gpy workflow --sync` to regenerate the committed workflow after config changes.
 
 ---
 
