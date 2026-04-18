@@ -50,7 +50,7 @@ jobs:
               with:
                 fetch-depth: 0
             - name: Setup Go
-              uses: actions/setup-go@v4
+              uses: actions/setup-go@v6
               with:
                 go-version: "1.22"
             - name: Build binary
@@ -97,7 +97,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Setup Go
-              uses: actions/setup-go@v4
+              uses: actions/setup-go@v6
               with:
                 go-version: "1.22"
             - name: Pack Chocolatey package
@@ -124,7 +124,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Setup Go
-              uses: actions/setup-go@v4
+              uses: actions/setup-go@v6
               with:
                 go-version: "1.22"
             - name: Publish Homebrew formula
@@ -173,7 +173,7 @@ jobs:
                 node-version: "24"
                 registry-url: https://registry.npmjs.org/
             - name: Setup Go
-              uses: actions/setup-go@v4
+              uses: actions/setup-go@v6
               with:
                 go-version: "1.22"
             - name: Publish npm package
@@ -200,7 +200,7 @@ jobs:
             - name: List artifacts
               run: find release-artifacts -type f -exec ls -lh {} \;
             - name: Upload to GitHub Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v3
               with:
                 files: release-artifacts/**/*
               env:

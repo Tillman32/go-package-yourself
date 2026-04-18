@@ -196,7 +196,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		},
 		{
 			Name: "Setup Go",
-			Uses: "actions/setup-go@v4",
+			Uses: "actions/setup-go@v6",
 			With: map[string]interface{}{
 				"go-version": goVersion,
 			},
@@ -404,7 +404,7 @@ func publishNpmJob(projectName string, npmCfg model.NPM) WorkflowJob {
 			},
 			{
 				Name: "Setup Go",
-				Uses: "actions/setup-go@v4",
+				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
 					"go-version": "1.22",
 				},
@@ -441,7 +441,7 @@ func publishHomebrewJob(projectName string, homebrewCfg model.Homebrew) Workflow
 			},
 			{
 				Name: "Setup Go",
-				Uses: "actions/setup-go@v4",
+				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
 					"go-version": "1.22",
 				},
@@ -505,7 +505,7 @@ func publishChocolateyJob(projectName string, chocolateyCfg model.Chocolatey) Wo
 			},
 			{
 				Name: "Setup Go",
-				Uses: "actions/setup-go@v4",
+				Uses: "actions/setup-go@v6",
 				With: map[string]interface{}{
 					"go-version": "1.22",
 				},
@@ -624,7 +624,7 @@ func releaseJob() WorkflowJob {
 			},
 			{
 				Name: "Upload to GitHub Release",
-				Uses: "softprops/action-gh-release@v1",
+				Uses: "softprops/action-gh-release@v3",
 				With: map[string]interface{}{
 					"files": "release-artifacts/**/*",
 				},
