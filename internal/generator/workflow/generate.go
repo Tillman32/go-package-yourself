@@ -154,6 +154,7 @@ type PushTrigger struct {
 type WorkflowJob struct {
 	Needs       []string          `yaml:"needs,omitempty"`
 	Permissions map[string]string `yaml:"permissions,omitempty"`
+	If          string            `yaml:"if,omitempty"`
 	RunsOn      string            `yaml:"runs-on"`
 	Strategy    *JobStrategy      `yaml:"strategy,omitempty"`
 	Steps       []WorkflowStep    `yaml:"steps"`
@@ -604,10 +605,8 @@ Add-Content -Path release-files.txt -Value '%s'`, checksumFile, checksumFile)
 func releaseJob() WorkflowJob {
 	return WorkflowJob{
 		Needs:  []string{"build"},
+		If:     "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')",
 		RunsOn: "ubuntu-latest",
-		Permissions: map[string]string{
-			"contents": "write",
-		},
 		Steps: []WorkflowStep{
 			{
 				Name: "Download artifacts",
