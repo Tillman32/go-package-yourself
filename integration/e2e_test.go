@@ -141,7 +141,7 @@ func TestGpyPackageOnlyFlags(t *testing.T) {
 				"packaging/npm/testapp/package.json",
 			},
 			shouldNotExist: []string{
-				"packaging/homebrew/testapp.rb",
+				"packaging/homebrew/Testapp.rb",
 				"packaging/chocolatey/testapp/testapp.nuspec",
 			},
 		},
@@ -149,7 +149,7 @@ func TestGpyPackageOnlyFlags(t *testing.T) {
 			name:    "only homebrew and chocolatey",
 			onlyArg: "homebrew,chocolatey",
 			shouldExist: []string{
-				"packaging/homebrew/testapp.rb",
+				"packaging/homebrew/Testapp.rb",
 				"packaging/chocolatey/testapp/testapp.nuspec",
 			},
 			shouldNotExist: []string{

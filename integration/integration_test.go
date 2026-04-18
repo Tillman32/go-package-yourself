@@ -34,7 +34,7 @@ func TestEndToEndMinimalConfig(t *testing.T) {
 	AssertValidJSON(t, npmPackageJson)
 
 	// Verify Homebrew formula
-	homebrewFormula := filepath.Join(tmpdir, "packaging", "homebrew", "testapp.rb")
+	homebrewFormula := filepath.Join(tmpdir, "packaging", "homebrew", "Testapp.rb")
 	AssertFileExists(t, homebrewFormula)
 
 	// Verify Chocolatey nuspec
@@ -59,7 +59,7 @@ func TestEndToEndWithAllGenerators(t *testing.T) {
 
 	// Verify all three generators produced output
 	AssertFileExists(t, filepath.Join(tmpdir, "packaging", "npm", "testapp", "package.json"))
-	AssertFileExists(t, filepath.Join(tmpdir, "packaging", "homebrew", "testapp.rb"))
+	AssertFileExists(t, filepath.Join(tmpdir, "packaging", "homebrew", "Testapp.rb"))
 	AssertFileExists(t, filepath.Join(tmpdir, "packaging", "chocolatey", "testapp", "testapp.nuspec"))
 
 	// Run gpy workflow
