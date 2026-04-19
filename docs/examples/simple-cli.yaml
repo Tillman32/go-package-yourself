@@ -80,7 +80,7 @@ packages:
 # 1. Place this file in your project root as `gpy.yaml`
 #
 # 2. Generate packages:
-#    go run github.com/brandon/go-package-yourself@latest package
+#    go run github.com/Tillman32/go-package-yourself@latest package
 #
 # 3. Review generated files:
 #    ls -la package.json homebrew.rb chocolatey.ps1 checksums.txt

@@ -391,8 +391,8 @@ internal/generator/newtool/
 package newtool
 
 import (
-    "github.com/brandon/go-package-yourself/internal/generator"
-    "github.com/brandon/go-package-yourself/internal/model"
+    "github.com/Tillman32/go-package-yourself/internal/generator"
+    "github.com/Tillman32/go-package-yourself/internal/model"
 )
 
 type NewToolGenerator struct{}

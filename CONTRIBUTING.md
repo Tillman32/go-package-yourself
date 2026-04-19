@@ -15,7 +15,7 @@ We welcome contributions! This guide explains how to set up your development env
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/brandon/go-package-yourself
+git clone https://github.com/Tillman32/go-package-yourself
 cd go-package-yourself
 ```
 

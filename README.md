@@ -38,7 +38,7 @@ gpy eliminates this busywork. Define your project once in YAML, and gpy generate
 ### 1. Initialize Config
 
 ```bash
-go run github.com/brandon/go-package-yourself@latest init
+go run github.com/Tillman32/go-package-yourself@latest init
 ```
 
 Interactive prompts create a `gpy.yaml` config file in your project root.
@@ -46,7 +46,7 @@ Interactive prompts create a `gpy.yaml` config file in your project root.
 ### 2. Generate Artifacts
 
 ```bash
-go run github.com/brandon/go-package-yourself@latest package
+go run github.com/Tillman32/go-package-yourself@latest package
 ```
 
 gpy generates package files for each enabled channel:
@@ -59,7 +59,7 @@ gpy generates package files for each enabled channel:
 ### 3. (Optional) Generate GitHub Workflow
 
 ```bash
-go run github.com/brandon/go-package-yourself@latest workflow --write
+go run github.com/Tillman32/go-package-yourself@latest workflow --write
 ```
 
 Creates `.github/workflows/gpy-release.yaml` to auto-build and release on tag push. The workflow is reusable, so it can also be called from other workflows.
@@ -70,19 +70,19 @@ Creates `.github/workflows/gpy-release.yaml` to auto-build and release on tag pu
 
 ### Global Install
 ```bash
-go install github.com/brandon/go-package-yourself@latest
+go install github.com/Tillman32/go-package-yourself@latest
 gpy init
 ```
 
 ### Ad-Hoc (No Install)
 ```bash
-go run github.com/brandon/go-package-yourself@latest init
-go run github.com/brandon/go-package-yourself@latest package
+go run github.com/Tillman32/go-package-yourself@latest init
+go run github.com/Tillman32/go-package-yourself@latest package
 ```
 
 ### From Source
 ```bash
-git clone https://github.com/brandon/go-package-yourself
+git clone https://github.com/Tillman32/go-package-yourself
 cd go-package-yourself
 go build -o gpy ./cmd/gpy
 ./gpy init
@@ -216,7 +216,7 @@ Generates GitHub Actions workflow YAML (`.github/workflows/gpy-release.yaml`):
 
 Real projects using gpy:
 
-- **[example-cli](https://github.com/brandon/example-cli)** — Simple CLI, minimal config
+- **[example-cli](https://github.com/Tillman32/example-cli)** — Simple CLI, minimal config
 - **[buildtool](https://github.com/acme/buildtool)** — Advanced: custom platforms, arm64 support, ldflags
 
 See [docs/examples/](docs/examples/) for annotated config files.
@@ -345,6 +345,6 @@ MIT — See [LICENSE](LICENSE)
 
 **v1.0.0** — Production ready. All generators tested and validated.
 
-- Latest release: [v1.0.0](https://github.com/brandon/go-package-yourself/releases/tag/v1.0.0)
-- Issue tracker: [GitHub Issues](https://github.com/brandon/go-package-yourself/issues)
+- Latest release: [v1.0.0](https://github.com/Tillman32/go-package-yourself/releases/tag/v1.0.0)
+- Issue tracker: [GitHub Issues](https://github.com/Tillman32/go-package-yourself/issues)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)

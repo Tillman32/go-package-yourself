@@ -208,9 +208,9 @@ Developed as a comprehensive Go CLI packaging solution to solve the tedious prob
 
 ## Links
 
-- [Homepage](https://github.com/brandon/go-package-yourself)
-- [Issues](https://github.com/brandon/go-package-yourself/issues)
-- [Releases](https://github.com/brandon/go-package-yourself/releases)
+- [Homepage](https://github.com/Tillman32/go-package-yourself)
+- [Issues](https://github.com/Tillman32/go-package-yourself/issues)
+- [Releases](https://github.com/Tillman32/go-package-yourself/releases)
 - [Documentation](docs/)
 - [Contributing](CONTRIBUTING.md)
 
