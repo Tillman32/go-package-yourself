@@ -190,7 +190,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 	steps := []WorkflowStep{
 		{
 			Name: "Checkout code",
-			Uses: "actions/checkout@v4",
+			Uses: "actions/checkout@v6",
 			With: map[string]interface{}{
 				"fetch-depth": 0,
 			},
@@ -236,7 +236,7 @@ func newWorkflow(projectName string, projectRepo string, goConfig model.Go, rele
 		},
 		{
 			Name: "Upload artifacts",
-			Uses: "actions/upload-artifact@v4",
+			Uses: "actions/upload-artifact@v7",
 			With: map[string]interface{}{
 				"name": "release-${{ matrix.os }}-${{ matrix.arch }}",
 				"path": "release-files.txt\n${{ matrix.archive }}\nchecksums.txt",
@@ -297,7 +297,7 @@ func publishDockerJob(projectRepo, imageName string) WorkflowJob {
 		Steps: []WorkflowStep{
 			{
 				Name: "Checkout code",
-				Uses: "actions/checkout@v4",
+				Uses: "actions/checkout@v6",
 			},
 			{
 				Name: "Set up Docker Buildx",
@@ -390,17 +390,20 @@ func publishNpmJob(projectName string, npmCfg model.NPM) WorkflowJob {
 	return WorkflowJob{
 		Needs:  []string{"build"},
 		RunsOn: "ubuntu-latest",
+		Permissions: map[string]string{
+			"contents": "read",
+			"id-token": "write",
+		},
 		Steps: []WorkflowStep{
 			{
 				Name: "Checkout code",
-				Uses: "actions/checkout@v4",
+				Uses: "actions/checkout@v6",
 			},
 			{
 				Name: "Setup Node.js",
-				Uses: "actions/setup-node@v4",
+				Uses: "actions/setup-node@v6",
 				With: map[string]interface{}{
 					"node-version": "24",
-					"registry-url": "https://registry.npmjs.org/",
 				},
 			},
 			{
@@ -412,13 +415,9 @@ func publishNpmJob(projectName string, npmCfg model.NPM) WorkflowJob {
 			},
 			{
 				Name: "Publish npm package",
-				Env: map[string]string{
-					"NODE_AUTH_TOKEN": "${{ secrets.NPM_TOKEN }}",
-				},
-				If: "env.NODE_AUTH_TOKEN != ''",
 				Run: fmt.Sprintf(`# Publish the committed gpy-generated npm package
 cd "packaging/npm/%s"
-npm publish`, packageName),
+npm publish --provenance`, packageName),
 			},
 		},
 	}
@@ -438,7 +437,7 @@ func publishHomebrewJob(projectName string, homebrewCfg model.Homebrew) Workflow
 		Steps: []WorkflowStep{
 			{
 				Name: "Checkout code",
-				Uses: "actions/checkout@v4",
+				Uses: "actions/checkout@v6",
 			},
 			{
 				Name: "Setup Go",
@@ -502,7 +501,7 @@ func publishChocolateyJob(projectName string, chocolateyCfg model.Chocolatey) Wo
 		Steps: []WorkflowStep{
 			{
 				Name: "Checkout code",
-				Uses: "actions/checkout@v4",
+				Uses: "actions/checkout@v6",
 			},
 			{
 				Name: "Setup Go",
@@ -610,7 +609,7 @@ func releaseJob() WorkflowJob {
 		Steps: []WorkflowStep{
 			{
 				Name: "Download artifacts",
-				Uses: "actions/download-artifact@v4",
+				Uses: "actions/download-artifact@v8",
 				With: map[string]interface{}{
 					"path":           "release-artifacts",
 					"pattern":        "release-*",
