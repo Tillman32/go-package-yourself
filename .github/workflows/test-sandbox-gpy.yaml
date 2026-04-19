@@ -26,18 +26,18 @@ jobs:
     name: Validate gpy against sandbox repo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Checkout sandbox repo
         if: ${{ inputs['sandbox-ref'] == '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Tillman32/gpy-test
           path: gpy-test
 
       - name: Checkout sandbox repo at requested ref
         if: ${{ inputs['sandbox-ref'] != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Tillman32/gpy-test
           ref: ${{ inputs['sandbox-ref'] }}
