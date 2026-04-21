@@ -1,4 +1,4 @@
-# gpy: Multi-Channel Go Binary Packager
+# Go Package Yourself (gpy)
 
 **Generate production-ready packages for npm, Homebrew, Chocolatey, Docker, and GitHub Actions — from a single YAML config.**
 
